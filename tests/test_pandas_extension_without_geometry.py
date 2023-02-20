@@ -1,7 +1,6 @@
 import geopandas as gpd
 import pandas as pd
 import pytest
-from italy_geopop import geopop
 
 from italy_geopop.geopop import ItalyGeopopDataFrame
 from italy_geopop.pandas_extension import activate_context
@@ -98,19 +97,19 @@ def province_names() -> pd.Series:
 
 
 @pytest.fixture
-def province_codes() -> pd.Series:
-    """
-    Returns a pd.Series with some valid provinces codes.
-    """
-    return pd.Series([68, 26, 75, 7, 32, 74, 4, 38, 57, 47])
-
-
-@pytest.fixture
 def province_names_short() -> pd.Series:
     """
     Returns a pd.Series with some valid provinces short names.
     """
     return pd.Series(['AG', 'RO', 'SA', 'CH', 'CN', 'SS', 'GO', 'LO', 'AQ', 'TS'])
+
+
+@pytest.fixture
+def province_codes() -> pd.Series:
+    """
+    Returns a pd.Series with some valid provinces codes.
+    """
+    return pd.Series([68, 26, 75, 7, 32, 74, 4, 38, 57, 47])
 
 
 @pytest.fixture

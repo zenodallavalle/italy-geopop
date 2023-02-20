@@ -1,7 +1,6 @@
 import geopandas as gpd
 import pandas as pd
 import pytest
-from italy_geopop import geopop
 
 from italy_geopop.geopop import ItalyGeopopDataFrame
 from italy_geopop.pandas_extension import activate_context

@@ -20,11 +20,18 @@ classifiers = [
 license = {file = "LICENSE"}
 dependencies = ["geopandas>=0.12.2", "numpy>=1.24.0", "pandas>=1.5.0"]
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.2.1",
+    "pytest-assume>=2.4.3"
+]
+
 [project.urls]
 "Homepage" = "https://github.com/zenodallavalle/italy-geopop"
 "Bug Tracker" = "https://github.com/zenodallavalle/italy-geopop/issues"
 
 [tool.hatch.build]
+pacakge-dir = ""
 include = [
   "italy_geopop/*.csv",
   "italy_geopop/*.geojson",
@@ -35,10 +42,6 @@ exclude = [
   "generate_geo_pop_csv"
 ]
 
-[tool.pytest.ini_options]
-pythonpath = [
-  "italy_geopop"
-]
 
 
 [tool.hatch.version]

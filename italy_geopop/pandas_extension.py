@@ -3,11 +3,18 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
-from .decorators import cache, handle_return_cols
-from . import geopop
+from ._decorators import cache, handle_return_cols
+from italy_geopop import geopop
 
 
-def activate(include_geometry=False) -> None:
+def pandas_activate(include_geometry=False) -> None:
+    """Activate pandas extension registering italy_geopop as pandas.Series accessor.
+
+    :param include_geometry: specifies if geometry column should also be returned when accessor is used, defaults to False
+    :type include_geometry: bool, optional
+    :return: Nothing
+    :rtype: None
+    """
     italy_geopop_df = geopop.ItalyGeopopDataFrame()
 
     @pd.api.extensions.register_series_accessor('italy_geopop')
@@ -157,9 +164,15 @@ def activate(include_geometry=False) -> None:
 
 
 @contextmanager
-def activate_context(include_geometry=False):
+def pandas_activate_context(include_geometry=False):
+    """
+    Same as activate but lives within the context.
+
+    :param include_geometry: same as `italy_geopop.activate <italy_geopop.html#module-italy_geopop.activate>`_.
+    :yields: Context with `italy_geopop` accessor registered to pd.Series.
+    """
     try:
-        activate(include_geometry=include_geometry)
+        pandas_activate(include_geometry=include_geometry)
         yield
     except:
         pass

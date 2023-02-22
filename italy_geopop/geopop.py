@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 
-from .decorators import cache
+from ._decorators import cache
 
 _current_abs_dir = os.path.dirname(os.path.realpath(__file__))
 

@@ -52,7 +52,6 @@ class ItalyGeopopDataFrame(pd.DataFrame):
             )
             .iloc[0, :]
         )
-        print(pd.concat([left_row, right_row]))
         return pd.concat([left_row, right_row])
 
     @classmethod

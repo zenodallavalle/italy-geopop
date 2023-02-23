@@ -14,17 +14,15 @@ description = "A python package that provides instant access to italy geographic
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
 ]
 license = {file = "LICENSE"}
 dependencies = ["geopandas>=0.12.2", "numpy>=1.24.0", "pandas>=1.5.0"]
 
 [project.optional-dependencies]
-test = [
-    "pytest>=7.2.1",
-    "pytest-assume>=2.4.3"
-]
+test = ["pytest>=7.2.1","pytest-assume>=2.4.3"]
+dev = ["sphinx>=6.0.0", "sphinx_rtd_theme>=1.2.0"]
 
 [project.urls]
 "Homepage" = "https://github.com/zenodallavalle/italy-geopop"
@@ -39,7 +37,8 @@ include = [
 ]
 exclude = [
   "tests/**",
-  "generate_geo_pop_csv"
+  "generate_geo_pop_csv/",
+  "docs",
 ]
 
 

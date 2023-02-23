@@ -7,13 +7,24 @@ from ._decorators import cache, handle_return_cols
 from italy_geopop import geopop
 
 
-def pandas_activate(include_geometry=False) -> None:
-    """Activate pandas extension registering italy_geopop as pandas.Series accessor.
+def pandas_activate(include_geometry=False):
+    """Activate pandas extension registering italy_geopop as pandas.Series `accessor <https://pandas.pydata.org/docs/development/extending.html>`_.
 
     :param include_geometry: specifies if geometry column should also be returned when accessor is used, defaults to False
     :type include_geometry: bool, optional
-    :return: Nothing
-    :rtype: None
+
+    :return: None
+
+    .. warning::
+        ``include_geometry=True`` comports costs in term of speed as geographic datasets need to be loaded.
+
+    .. example:.
+        .. code-block:: python
+        :linenos:
+            from italy_geopop.pandas_extension import pandas_activate
+            pandas_activate(include_geometry=False)
+            data = pd.Series(["Torino", "Agliè", "Airasca"])
+            data.italy_geopop.from_municipality()
     """
     italy_geopop_df = geopop.ItalyGeopopDataFrame()
 
@@ -168,7 +179,7 @@ def pandas_activate_context(include_geometry=False):
     """
     Same as activate but lives within the context.
 
-    :param include_geometry: same as `italy_geopop.activate <italy_geopop.html#module-italy_geopop.activate>`_.
+    :param include_geometry: same as `italy_geopop.activate <#italy_geopop.pandas_extension.pandas_activate>`_.
     :yields: Context with `italy_geopop` accessor registered to pd.Series.
     """
     try:

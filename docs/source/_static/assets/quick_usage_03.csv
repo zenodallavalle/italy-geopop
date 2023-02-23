@@ -1,0 +1,4 @@
+,geometry,region,region_code,provinces,population,population_F,population_M
+0,POLYGON ,Piemonte,1,"[{'province_code': 1, 'pr",4256350.0,2182505.0,2073845.0
+1,MULTIPOLYGON ,Lombardia,3,"[{'province_code': 12, 'p",9943004.0,5061476.0,4881528.0
+2,POLYGON ,Veneto,5,"[{'province_code': 23, 'p",4847745.0,2467002.0,2380743.0

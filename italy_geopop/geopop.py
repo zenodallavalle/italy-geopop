@@ -3,12 +3,12 @@ import numpy as np
 import pandas as pd
 import os
 
-from ._decorators import args_kwargs_cache
-
 _current_abs_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class ItalyGeopopDataFrame(pd.DataFrame):
+    """A subclass of `pandas.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_ that contains italian population from ISTAT."""
+
     @classmethod
     def _generate_municipality_records(cls, df) -> pd.Series:
         data = df[['municipality_code', 'municipality']].to_dict('records')
@@ -96,8 +96,8 @@ class ItalyGeopopDataFrame(pd.DataFrame):
     def aggregate_province(self) -> pd.DataFrame:
         """Aggregate provinces.
 
-        :return: _description_
-        :rtype: pd.DataFrame
+        :return: 2-dimensional dataframe with provinces, provinces codes, provinces short names, regions, regions code, municipalities (as a list of municipality records (see :ref:`municipality data <municipality-data>`)) and population data for every province.
+        :rtype: pandas.DataFrame
         """
         return (
             self.groupby(['province', 'province_code', 'province_short'])
@@ -106,6 +106,11 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         )
 
     def aggregate_region(self) -> pd.DataFrame:
+        """Aggregate provinces.
+
+        :return: 2-dimensional dataframe with regions, regions code, provinces (as a list of provinces records (see :ref:`province data <province-data>`)) and population data for every region.
+        :rtype: pandas.DataFrame
+        """
         return (
             self.groupby(['region', 'region_code'])
             .apply(ItalyGeopopDataFrame._aggregate_region)
@@ -113,8 +118,12 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         )
 
     @classmethod
-    @args_kwargs_cache
     def get_municipalities_geometry(cls) -> pd.DataFrame:
+        """Classmethod to get geospatial data for plotting municipalities.
+
+        :return: a 2-dimensional dataframe with one column, ``geometry``, and ``municipality_code`` as index.
+        :rtype: pd.DataFrame
+        """
         data = gpd.read_file(
             os.path.join(_current_abs_dir, 'limits_IT_municipalities.geojson')
         )
@@ -128,8 +137,12 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         return data
 
     @classmethod
-    @args_kwargs_cache
     def get_provinces_geometry(cls) -> pd.DataFrame:
+        """Classmethod to get geospatial data for plotting provinces.
+
+        :return: a 2-dimensional dataframe with one column, ``geometry``, and ``province_code`` as index.
+        :rtype: pd.DataFrame
+        """
         file = gpd.read_file(
             os.path.join(_current_abs_dir, './limits_IT_provinces.geojson')
         )
@@ -143,8 +156,12 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         return file
 
     @classmethod
-    @args_kwargs_cache
     def get_regions_geometry(cls) -> pd.DataFrame:
+        """Classmethod to get geospatial data for plotting regions.
+
+        :return: a 2-dimensional dataframe with one column, ``geometry``, and ``region_code`` as index.
+        :rtype: pd.DataFrame
+        """
         file = gpd.read_file(
             os.path.join(_current_abs_dir, './limits_IT_regions.geojson')
         )

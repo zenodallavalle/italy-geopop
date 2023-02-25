@@ -3,8 +3,7 @@ import numpy as np
 import pandas as pd
 from warnings import warn
 
-from ._decorators import dumb_cache
-from ._utils import handle_return_cols
+from ._utils import handle_return_cols, simple_cache
 from . import geopop
 
 
@@ -45,7 +44,7 @@ class ItalyGeopop:
         return self.italy_geopop_df
 
     @staticmethod
-    @dumb_cache
+    @simple_cache
     def _generate_municipality_dfs(
         italy_geopop_df: geopop.ItalyGeopopDataFrame, include_geometry: bool
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -55,7 +54,7 @@ class ItalyGeopop:
             temp_df = pd.merge(
                 italy_geopop_df.get_municipalities_geometry(),
                 italy_geopop_df,
-                how='right',
+                how='outer',
                 right_on='municipality_code',
                 left_index=True,
             )
@@ -93,7 +92,7 @@ class ItalyGeopop:
         return handle_return_cols(self._obj.apply(get_data), return_cols)
 
     @staticmethod
-    @dumb_cache
+    @simple_cache
     def _generate_province_dfs(
         italy_geopop_df: geopop.ItalyGeopopDataFrame, include_geometry: bool
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -103,7 +102,7 @@ class ItalyGeopop:
             temp_df = pd.merge(
                 italy_geopop_df.get_provinces_geometry(),
                 italy_geopop_df.aggregate_province(),
-                how='right',
+                how='outer',
                 right_on='province_code',
                 left_index=True,
             )
@@ -150,7 +149,7 @@ class ItalyGeopop:
         return handle_return_cols(self._obj.apply(get_data), return_cols)
 
     @staticmethod
-    @dumb_cache
+    @simple_cache
     def _generate_region_dfs(
         italy_geopop_df: geopop.ItalyGeopopDataFrame, include_geometry: bool
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -160,7 +159,7 @@ class ItalyGeopop:
             temp_df = pd.merge(
                 italy_geopop_df.get_regions_geometry(),
                 italy_geopop_df.aggregate_region(),
-                how='right',
+                how='outer',
                 right_on='region_code',
                 left_index=True,
             )
@@ -202,7 +201,7 @@ class ItalyGeopop:
 
 
 def pandas_activate(include_geometry=False):
-    """Activate pandas extension registering italy_geopop as pandas.Series `accessor <https://pandas.pydata.org/docs/development/extending.html>`_.
+    """Activate pandas extension registering class :py:class:ItalyGeopop as pandas.Series `accessor <https://pandas.pydata.org/docs/development/extending.html>`_ named ``italy_geopop``.
 
     :param include_geometry: specifies if geometry column should also be returned when accessor is used, defaults to False
     :type include_geometry: bool, optional
@@ -211,14 +210,6 @@ def pandas_activate(include_geometry=False):
 
     .. warning::
         ``include_geometry=True`` comports costs in term of speed as geographic datasets need to be loaded.
-
-    .. example:
-        .. code-block:: python
-        :linenos:
-            from italy_geopop.pandas_extension import pandas_activate
-            pandas_activate(include_geometry=False)
-            data = pd.Series(["Torino", "Agliè", "Airasca"])
-            data.italy_geopop.from_municipality()
     """
 
     @pd.api.extensions.register_series_accessor('italy_geopop')
@@ -232,16 +223,27 @@ def pandas_activate(include_geometry=False):
 @contextmanager
 def pandas_activate_context(include_geometry=False):
     """
-    Same as activate but lives within the context.
+    Same as activate but lives within the context. Useful if you want to register the accessor with different
+    initialization options more than once in your code or if you want to free up memory right after you get the needed data
+    (the trade off is that italy-geopop needs to be reinitialized everytime you register and use the accessor).
 
     :param include_geometry: same as `italy_geopop.activate <#italy_geopop.pandas_extension.pandas_activate>`_.
-    :yields: Context with `italy_geopop` accessor registered to pd.Series.
+    :yields: Context with ``italy_geopop`` accessor registered to pd.Series.
+
+    .. code-block:: python
+
+       # pandas_activate_context example
+
+       with pandas_activate_context():
+           # You can access italy_geopop here
+
+       # You cannot access italy_geopop here
     """
     try:
         pandas_activate(include_geometry=include_geometry)
         yield
-    except:
-        pass
+    except Exception as e:
+        raise e
     finally:
         try:
             del pd.Series.italy_geopop

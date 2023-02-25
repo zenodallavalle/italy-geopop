@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 
-from ._decorators import cache
+from ._decorators import args_kwargs_cache
 
 _current_abs_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -30,8 +30,8 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         right_row = (
             df[
                 [
-                    'province_code',
                     'province',
+                    'province_code',
                     'province_short',
                     'region',
                     'region_code',
@@ -40,7 +40,7 @@ class ItalyGeopopDataFrame(pd.DataFrame):
                     'population_M',
                 ]
             ]
-            .groupby(['province_code', 'province', 'province_short'])
+            .groupby(['province', 'province_code', 'province_short'])
             .agg(
                 {
                     'region': 'first',
@@ -94,8 +94,13 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         )
 
     def aggregate_province(self) -> pd.DataFrame:
+        """Aggregate provinces.
+
+        :return: _description_
+        :rtype: pd.DataFrame
+        """
         return (
-            self.groupby(['province_code', 'province', 'province_short'])
+            self.groupby(['province', 'province_code', 'province_short'])
             .apply(ItalyGeopopDataFrame._aggregate_province)
             .reset_index()
         )
@@ -108,7 +113,7 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         )
 
     @classmethod
-    @cache
+    @args_kwargs_cache
     def get_municipalities_geometry(cls) -> pd.DataFrame:
         data = gpd.read_file(
             os.path.join(_current_abs_dir, 'limits_IT_municipalities.geojson')
@@ -123,7 +128,7 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         return data
 
     @classmethod
-    @cache
+    @args_kwargs_cache
     def get_provinces_geometry(cls) -> pd.DataFrame:
         file = gpd.read_file(
             os.path.join(_current_abs_dir, './limits_IT_provinces.geojson')
@@ -138,7 +143,7 @@ class ItalyGeopopDataFrame(pd.DataFrame):
         return file
 
     @classmethod
-    @cache
+    @args_kwargs_cache
     def get_regions_geometry(cls) -> pd.DataFrame:
         file = gpd.read_file(
             os.path.join(_current_abs_dir, './limits_IT_regions.geojson')

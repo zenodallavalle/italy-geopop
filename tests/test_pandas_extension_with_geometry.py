@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from italy_geopop.geopop import ItalyGeopopDataFrame
-from italy_geopop.pandas_extension import activate_context
+from italy_geopop.pandas_extension import pandas_activate_context
 
 
 _municipality_columns = [
@@ -144,7 +144,7 @@ def region_codes() -> pd.Series:
 def test_pandas_extension_from_municipality_return_df_with_same_index_as_input(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_municipality()
     diffs = output.index.to_series() != dummy_series.index.to_series()
     assert diffs.sum() == 0
@@ -153,7 +153,7 @@ def test_pandas_extension_from_municipality_return_df_with_same_index_as_input(
 def test_pandas_extension_from_municipality_returns_all_columns_if_not_differently_specified(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_municipality()
     for c in (
         _municipality_columns
@@ -167,7 +167,7 @@ def test_pandas_extension_from_municipality_returns_all_columns_if_not_different
 def test_pandas_extension_from_municipality_return_df_with_same_index_as_input(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_municipality()
     diffs = output.index.to_series() != dummy_series.index.to_series()
     assert diffs.sum() == 0
@@ -176,7 +176,7 @@ def test_pandas_extension_from_municipality_return_df_with_same_index_as_input(
 def test_pandas_extension_from_municipality_returns_all_columns_if_not_differently_specified(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_municipality()
     for c in (
         _municipality_columns
@@ -190,7 +190,7 @@ def test_pandas_extension_from_municipality_returns_all_columns_if_not_different
 def test_pandas_extension_from_province_return_df_with_same_index_as_input(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_province()
     diffs = output.index.to_series() != dummy_series.index.to_series()
     assert diffs.sum() == 0
@@ -199,7 +199,7 @@ def test_pandas_extension_from_province_return_df_with_same_index_as_input(
 def test_pandas_extension_from_province_returns_all_columns_if_not_differently_specified(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_province()
     for c in _province_columns + _region_columns + _population_columns:
         pytest.assume(c in output.columns)
@@ -210,7 +210,7 @@ def test_pandas_extension_from_province_returns_all_columns_if_not_differently_s
 def test_pandas_extension_from_region_return_df_with_same_index_as_input(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_region()
     diffs = output.index.to_series() != dummy_series.index.to_series()
     assert diffs.sum() == 0
@@ -219,7 +219,7 @@ def test_pandas_extension_from_region_return_df_with_same_index_as_input(
 def test_pandas_extension_from_region_returns_all_columns_if_not_differently_specified(
     dummy_series,
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         output = dummy_series.italy_geopop.from_region()
     for c in _region_columns + _population_columns:
         pytest.assume(c in output.columns)
@@ -230,7 +230,7 @@ def test_pandas_extension_from_region_returns_all_columns_if_not_differently_spe
 def test_pandas_extension_find_correct_municipality_information_from_names(
     geopop_df, municipality_names
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected = (
             geopop_df.set_index('municipality')
             .loc[municipality_names.to_list()]
@@ -254,7 +254,7 @@ def test_pandas_extension_find_correct_municipality_information_from_names(
 def test_pandas_extension_find_correct_municipality_information_from_codes(
     geopop_df, municipality_codes
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected = (
             geopop_df.set_index('municipality_code')
             .loc[municipality_codes.to_list()]
@@ -278,7 +278,7 @@ def test_pandas_extension_find_correct_municipality_information_from_codes(
 def test_pandas_extension_find_correct_municipality_information_from_mixed_names_and_codes(
     geopop_df, municipality_codes, municipality_names
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected_names = (
             geopop_df.set_index('municipality')
             .loc[municipality_names.to_list()]
@@ -311,7 +311,7 @@ def test_pandas_extension_find_correct_municipality_information_from_mixed_names
 def test_pandas_extension_find_correct_province_information_from_names(
     geopop_df, province_names
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected = (
             geopop_df.aggregate_province()
             .set_index('province')
@@ -336,7 +336,7 @@ def test_pandas_extension_find_correct_province_information_from_names(
 def test_pandas_extension_find_correct_province_information_from_codes(
     geopop_df, province_codes
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected = (
             geopop_df.aggregate_province()
             .set_index('province_code')
@@ -361,7 +361,7 @@ def test_pandas_extension_find_correct_province_information_from_codes(
 def test_pandas_extension_find_correct_province_information_from_names_short(
     geopop_df, province_names_short
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected = (
             geopop_df.aggregate_province()
             .set_index('province_short')
@@ -386,7 +386,7 @@ def test_pandas_extension_find_correct_province_information_from_names_short(
 def test_pandas_extension_find_correct_province_information_from_mixed_names_and_codes_and_names_short(
     geopop_df, province_names, province_codes, province_names_short
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected_names = (
             geopop_df.aggregate_province()
             .set_index('province')
@@ -433,7 +433,7 @@ def test_pandas_extension_find_correct_province_information_from_mixed_names_and
 def test_pandas_extension_find_correct_region_information_from_names(
     geopop_df, region_names
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected = (
             geopop_df.aggregate_region()
             .set_index('region')
@@ -458,7 +458,7 @@ def test_pandas_extension_find_correct_region_information_from_names(
 def test_pandas_extension_find_correct_region_information_from_codes(
     geopop_df, region_codes
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected = (
             geopop_df.aggregate_region()
             .set_index('region_code')
@@ -483,7 +483,7 @@ def test_pandas_extension_find_correct_region_information_from_codes(
 def test_pandas_extension_find_correct_region_information_from_mixed_names_and_codes(
     geopop_df, region_names, region_codes
 ):
-    with activate_context(include_geometry=True):
+    with pandas_activate_context(include_geometry=True):
         expected_names = (
             geopop_df.aggregate_region()
             .set_index('region')

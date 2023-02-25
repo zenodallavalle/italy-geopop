@@ -24,12 +24,15 @@ def build_material() -> None:
                 )
 
 
-print('Material building started...')
-try:
-    build_material()
-    print('Build successed!')
-except Exception as e:
-    print('Build failed.', e)
+if os.environ.get('SKIPMATERIAL', 'FALSE').lower().strip() == 'true':
+    print('Skipping material build as requested')
+else:
+    print('Material building started...')
+    try:
+        build_material()
+        print('Build successed!')
+    except Exception as e:
+        print('Build failed.', e)
 
 from italy_geopop import __version__
 
@@ -64,6 +67,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
+
 html_static_path = ['_static']
 html_js_files = ['js/custom.js']
 html_css_files = ['css/custom.css']

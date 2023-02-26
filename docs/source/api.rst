@@ -3,13 +3,13 @@
 ..
    Generated with sphinx-apidoc --force --tocfile api -o ./source ../italy_geopop/
 
-Data provided by the module
+Data provided by the package
 --------------------------------
 
-Demographic data
+Population data
 ********************
 
-Demographic data provided by ISTAT (Istituto Italiano di Statistica).
+Population data provided by ISTAT (Istituto Italiano di Statistica).
 
 - ``population_M: float`` - male population;
 

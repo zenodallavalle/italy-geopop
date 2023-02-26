@@ -5,10 +5,10 @@
 -----------------
 
 **Italy-geopop** is a python library that provides instant access
-to **italian geographic and demographic data**.
+to **italian geospatial and population data**.
 
-It combines the excellent geographic data provided by `openpolis/geojson-italy <https://github.com/openpolis/geojson-italy>`_
-with the demographics data from the italian istitute of statistics `ISTAT <https://www.istat.it/en/>`_.
+It combines the excellent geospatial data provided by `openpolis/geojson-italy <https://github.com/openpolis/geojson-italy>`_
+with population data provided by the italian istitute of statistics `ISTAT <https://www.istat.it/en/>`_.
 
 .. important::
 

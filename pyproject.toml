@@ -10,7 +10,7 @@ dynamic = [
 authors = [
   { name="Zeno Dalla Valle", email="zenodallavalle@gmail.com" },
 ]
-description = "A python package that provides instant access to italy geographic and demographic data."
+description = "A python package that provides instant access to italian geospatial and population data."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [

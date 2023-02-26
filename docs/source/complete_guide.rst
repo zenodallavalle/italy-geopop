@@ -58,7 +58,7 @@ In that way we will obtain a dataset with the number of hospital beds for every 
   :file: _static/assets/tut_01_table_01.csv
   :header-rows: 1
 
-At this point we may want to plot the geographic distribution of hospital beds and that's when **italy-geopop** can helps us.
+At this point we may want to plot the geospatial distribution of hospital beds and that's when **italy-geopop** can helps us.
 
 First of all, let's **activate the accessor**. This registers the accessor to pandas and let us take advantage of italy-geopop functionalities.
 
@@ -76,7 +76,7 @@ First of all, let's **activate the accessor**. This registers the accessor to pa
 
   Here you can find the :ref:`complete api reference documentation <pandas_extension>` for both ``pandas_activate`` and ``pandas_activate_context``.
 
-And now we can get the geographic data we need to plot the geographic distribution using ``italy_geopop.from_province`` accessor.
+And now we can get the geospatial data we need to plot the geospatial distribution using ``italy_geopop.from_province`` accessor.
 
 .. code-block:: python
   :lineno-start: 8
@@ -97,7 +97,7 @@ This should output
   :header-rows: 1
 
 
-Now we have geographic data for every province but ``df`` is a ``pandas.DataFrame`` instance and we need a ``geopandas.GeoDataFrame`` instance in order to generate the plot.
+Now we have geospatial data for every province but ``df`` is a ``pandas.DataFrame`` instance and we need a ``geopandas.GeoDataFrame`` instance in order to generate the plot.
 
 
 .. note::
@@ -202,7 +202,7 @@ Then we use ``pandas.DataFrame.groupby`` to group the dataset by ``region_code``
   :file: _static/assets/tut_01_table_05.csv
   :header-rows: 1
 
-Then we can get geographic and population data for regions using ``italy_geopop.from_region`` accessor.
+Then we can get geospatial and population data for regions using ``italy_geopop.from_region`` accessor.
 Then we recalculate the ``beds_per_capita`` column dividing number of region's hospital beds for region's population.
 
 .. code-block:: python

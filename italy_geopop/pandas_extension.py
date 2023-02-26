@@ -38,7 +38,7 @@ class ItalyGeopop:
     def population_df(self) -> geopop.ItalyGeopopDataFrame:
         """Get all italy-geopop data in a subclass of ``pandas.DataFrame.``
 
-        :return: All demographics (and geographics if accessor was initialized with ``include_geometry=True``) data.
+        :return: All population (and geospatials if accessor was initialized with ``include_geometry=True``) data for every municipality.
         :rtype: geopop.ItalyGeopopDataFrame
         """
         return self.italy_geopop_df
@@ -209,7 +209,7 @@ def pandas_activate(include_geometry=False):
     :return: None
 
     .. warning::
-        ``include_geometry=True`` comports costs in term of speed as geographic datasets need to be loaded.
+        ``include_geometry=True`` comports costs in term of speed as geospatial datasets need to be loaded.
     """
 
     @pd.api.extensions.register_series_accessor('italy_geopop')

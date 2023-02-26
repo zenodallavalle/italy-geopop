@@ -21,8 +21,14 @@ license = {file = "LICENSE"}
 dependencies = ["geopandas>=0.12.2", "numpy>=1.24.0", "pandas>=1.5.0"]
 
 [project.optional-dependencies]
-test = ["pytest>=7.2.1","pytest-assume>=2.4.3"]
-dev = ["sphinx>=6.0.0", "sphinx_rtd_theme>=1.2.0"]
+test = [
+  "pytest>=7.2.1",
+  "pytest-assume>=2.4.3"
+]
+dev = [
+  "sphinx>=6.0.0",
+  "sphinx_rtd_theme>=1.2.0"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/zenodallavalle/italy-geopop"

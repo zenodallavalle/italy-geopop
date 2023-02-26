@@ -117,7 +117,7 @@ class ItalyGeopop:
 
     def from_province(self, return_cols=None) -> pd.DataFrame:
         """Get data for provinces.
-        Input series can contain provinces names, provinces short names or provinces istat codes; *data types can also be mixed*.
+        Input series can contain provinces names, provinces abbreviations or provinces istat codes; *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
         :param return_cols: used to subset the return data in order to provide requested fields. If None, all available fields are returned. Available fields are listed above, defaults to None.

@@ -40,10 +40,10 @@ Let's read the csv file and see how it looks like.
 
 .. warning::
 
-  Remember to use ``keep_default_na=False`` when reading dataset as ``province_short``, which is the province short name,
+  Remember to use ``keep_default_na=False`` when reading dataset as ``province_short``, which is the province abbreviation,
   for Naples is *'NA'*, so pandas default behaviour is to treat it as null.
 
-The dataset contains only two columns: ``beds`` and ``province_short``. As you can notice province_short has values repeated multiple times,
+The dataset contains only two columns: ``beds`` and ``province_short``. As you can notice ``province_short`` has values repeated multiple times,
 that's because every row of the table is an hospital in the original dataset, so we need to group the dataset by ``province_short`` and sum the ``bed`` column.
 In that way we will obtain a dataset with the number of hospital beds for every province.
 
@@ -218,7 +218,7 @@ Then we recalculate the ``beds_per_capita`` column dividing number of region's h
   because the accessor will recognize the kind of data you pass to it, wheater it is region full name or region code,
   *e.g. 'Piemonte' == 1*. This behaviour is valid also for ``italy_geopop.from_municipality``, that can accept municipality name
   or municipality code, *e.g. 'Torino' == 1272*, and is valid also for ``italy_geopop.from_province``, that can accept not only province name and province_code
-  but also province short name, that's actually what is used in this tutorial, *e.g. 'TO' == 'Torino' == 1*.
+  but also province abbreviation, that's actually what is used in this tutorial, *e.g. 'TO' == 'Torino' == 1*.
   Moreover you can pass mixed data type to the accessor.
 
 

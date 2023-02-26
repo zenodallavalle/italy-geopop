@@ -99,7 +99,7 @@ def province_names() -> pd.Series:
 @pytest.fixture
 def province_names_short() -> pd.Series:
     """
-    Returns a pd.Series with some valid provinces short names.
+    Returns a pd.Series with some valid provinces abbreviations.
     """
     return pd.Series(['AG', 'RO', 'SA', 'CH', 'CN', 'SS', 'GO', 'LO', 'AQ', 'TS'])
 

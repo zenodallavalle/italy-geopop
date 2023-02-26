@@ -82,7 +82,7 @@ class ItalyGeopopDataFrame(pd.DataFrame):
                     'n/a',
                     'nan',
                     'null',
-                    # 'NA' #This is used by Napoli short province
+                    # 'NA' #This is Napoli province abbreviation
                 ],
                 keep_default_na=False,
                 dtype={
@@ -96,7 +96,7 @@ class ItalyGeopopDataFrame(pd.DataFrame):
     def aggregate_province(self) -> pd.DataFrame:
         """Aggregate provinces.
 
-        :return: 2-dimensional dataframe with provinces, provinces codes, provinces short names, regions, regions code, municipalities (as a list of municipality records (see :ref:`municipality data <municipality-data>`)) and population data for every province.
+        :return: 2-dimensional dataframe with provinces, provinces codes, provinces abbreviations, regions, regions code, municipalities (as a list of municipality records (see :ref:`municipality data <municipality-data>`)) and population data for every province.
         :rtype: pandas.DataFrame
         """
         return (

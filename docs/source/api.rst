@@ -17,7 +17,7 @@ Population data provided by ISTAT (Istituto Italiano di Statistica).
 
 - ``population: float`` - sum of male and female populations.
 
-Some municipalities have no data for population available. Italy-geopop will return `numpy.nan <https://numpy.org/doc/stable/reference/constants.html#numpy.nan>`_.
+Some municipalities have no population data available. Italy-geopop will return `numpy.nan <https://numpy.org/doc/stable/reference/constants.html#numpy.nan>`_.
 
 .. _municipality-data:
 

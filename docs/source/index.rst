@@ -8,7 +8,7 @@
 to **italian geospatial and population data**.
 
 It combines the excellent geospatial data provided by `openpolis/geojson-italy <https://github.com/openpolis/geojson-italy>`_
-with population data provided by the italian istitute of statistics `ISTAT <https://www.istat.it/en/>`_.
+with the population data provided by the italian istitute of statistics `ISTAT <https://www.istat.it/en/>`_.
 
 .. important::
 

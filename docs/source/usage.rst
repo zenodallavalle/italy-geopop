@@ -65,5 +65,5 @@ Or you can use italy-geopop to get data for your `pd.Series <https://pandas.pyda
 
 More
 -------
-Check out complete guide for more informations.
+Check out the complete guide for more informations.
 

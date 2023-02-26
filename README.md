@@ -1,5 +1,7 @@
 # 🗺️ 🇮🇹 Italy-geopop
 
+[![Documentation Status](https://readthedocs.org/projects/italy-geopop/badge/?version=latest)](https://italy-geopop.readthedocs.io/en/latest/?badge=latest)
+
 - [🗺️ 🇮🇹 Italy-geopop](#️--italy-geopop)
   - [🧐 What is it?](#-what-is-it)
   - [🚀 Main features](#-main-features)

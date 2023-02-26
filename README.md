@@ -87,7 +87,7 @@ Italy-geopop includes data from:
 
 ## 🔎 Full docs reference
 
-🚧 Work in progress 🏗️
+You can find full docs on [italy-geopop.readthedocs.io](https://italy-geopop.readthedocs.io/en/latest).
 
 ## 👩‍💻 Contributes
 

@@ -24,7 +24,13 @@ def build_material() -> None:
                 )
 
 
-if os.environ.get('SKIPMATERIAL', 'FALSE').lower().strip() == 'true':
+if os.environ.get('BUILDMATERIAL', 'FALSE').lower().strip() not in [
+    '0',
+    'false',
+    'no',
+    'ignore',
+    'skip',
+]:
     print('Skipping material build as requested')
 else:
     print('Material building started...')

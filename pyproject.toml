@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "italy-geopop"
+dynamic = [
+  "version"
+]
+authors = [
+  { name="Zeno Dalla Valle", email="zenodallavalle@gmail.com" },
+]
+description = "A python package that provides instant access to italian geospatial and population data."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+license = {file = "LICENSE"}
+dependencies = ["geopandas>=0.12.2", "numpy>=1.24.0", "pandas>=1.5.0"]
+
+[project.optional-dependencies]
+test = ["pytest>=7.2.1","pytest-assume>=2.4.3"]
+dev = ["sphinx>=6.0.0", "sphinx_rtd_theme>=1.2.0"]
+
+[project.urls]
+"Homepage" = "https://github.com/zenodallavalle/italy-geopop"
+"Bug Tracker" = "https://github.com/zenodallavalle/italy-geopop/issues"
+
+[tool.hatch.build]
+pacakge-dir = ""
+include = [
+  "italy_geopop/*.csv",
+  "italy_geopop/*.geojson",
+  "**/*.py",
+]
+exclude = [
+  "tests/**",
+  "generate_geo_pop_csv/",
+  "docs",
+]
+
+
+
+[tool.hatch.version]
+path = "italy_geopop/__version__.py"

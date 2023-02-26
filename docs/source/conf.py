@@ -1,4 +1,3 @@
-from logging import root
 import os
 import sys
 
@@ -24,7 +23,7 @@ def build_material() -> None:
                 )
 
 
-if os.environ.get('BUILDMATERIAL', 'FALSE').lower().strip() not in [
+if os.environ.get('BUILDMATERIAL', 'FALSE').lower().strip() in [
     '0',
     'false',
     'no',

@@ -16,10 +16,12 @@ Tutorial #1 - Hospital beds in Italy
 """"""""""""""""""""""""""""""""""""""""""""""""""""
 
 
-Let's suppose you want to answer this question. Then you will need hospital beds data. Luckily the Italian Health Ministry published such data under `Italian Open Data License <https://www.dati.gov.it/iodl/2.0/>`_, so everyone can access data `here <https://www.dati.salute.gov.it/dati/dettaglioDataset.jsp?menu=dati&idPag=18>`_.
+Let's suppose you want to answer this question. To do so, you need hospital beds data. Luckily the Italian Health Ministry published such data under `Italian Open Data License <https://www.dati.gov.it/iodl/2.0/>`_, so everyone can access it `here <https://www.dati.salute.gov.it/dati/dettaglioDataset.jsp?menu=dati&idPag=18>`_.
 
 .. note::
-  A simplified version of that dataset with only the useful columns translated in english and filtered for ``year==2019``, the latest available, is available for download and will be used in this guide.
+
+  A simplified version of that dataset is available for download and it will be used in this guide.
+  This dataset only contains observations from the year 2019. Only the columns used in the guide were kept and the labels were translated to english.
   
   👉 `open_data_italy_hospitals_beds_2019.csv <_static/assets/open_data_italy_hospitals_beds_2019.csv>`_
 
@@ -129,7 +131,7 @@ Now we have geospatial data for every province but ``df`` is a ``pandas.DataFram
   :width: 80 %
   :align: center
 
-We can see that there are a few provinces with a very high number of hospital beds and the others seem to have a very low number of beds.
+We can see that there are few provinces with a very high number of hospital beds and the others seem to have a very low number of beds.
 
 There must be some kind of *bias*.
 
@@ -150,7 +152,7 @@ At least we need to adjust the number of beds for province's population and ital
 
 Here we created the ``population`` column. *Note that we assigned it using single square brackets because the output
 of italy_geopop accessor was 1-dimensional.* Then we created ``beds_per_capita`` column dividing beds for population
-which produces the number of hospital beds for person.
+obtaining the number of hospital beds per person.
 
 Now we can create the same plot as before but adjusted for province population.
 

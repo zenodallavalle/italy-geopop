@@ -69,7 +69,7 @@ class ItalyGeopop:
         Input series can contain municipalities names or municipalities istat codes; *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
-        :param return_cols: used to subset the return data in order to provide requested fields. If None, all available fields are returned. Available fields are listed above, defaults to None.
+        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. The available fields are listed above, defaults to None.
         :type include_geometry: bool, optional
 
         :raises KeyError: if return_cols is or contains a column not listed above or includes ``geometry`` and accessor was intialize without geometry data.
@@ -120,7 +120,7 @@ class ItalyGeopop:
         Input series can contain provinces names, provinces abbreviations or provinces istat codes; *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
-        :param return_cols: used to subset the return data in order to provide requested fields. If None, all available fields are returned. Available fields are listed above, defaults to None.
+        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. The available fields are listed above, defaults to None.
         :type include_geometry: bool, optional
 
         .. note::
@@ -174,7 +174,7 @@ class ItalyGeopop:
         Input series can contain regions names or regions istat codes; *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
-        :param return_cols: used to subset the return data in order to provide requested fields. If None, all available fields are returned, defaults to None.
+        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. The available fields are listed above, defaults to None.
         :type include_geometry: bool, optional
 
         .. note::

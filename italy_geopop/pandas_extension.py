@@ -1,4 +1,6 @@
 from contextlib import contextmanager
+from functools import cache
+from os import stat
 import numpy as np
 import pandas as pd
 from warnings import warn
@@ -17,22 +19,8 @@ class ItalyGeopop:
         self._obj = pandas_obj
 
     @classmethod
-    def _generate_empty_serie(cls, df, index) -> pd.Series:
-        columns = df.columns.tolist()
-        data = [np.nan for _ in columns]
-        return pd.Series(data, index=columns, name=index)
-
-    @classmethod
-    def _extract_serie(cls, df, index) -> pd.Series:
-        try:
-            ret = pd.Series(df.loc[index, :])
-            return ret
-        except ValueError:
-            warn(f"Multiple values found for value '{index}'")
-        except KeyError:
-            pass
-        ret = cls._generate_empty_serie(df, index)
-        return ret
+    def _generate_empty_serie(cls, columns) -> pd.Series:
+        return pd.Series([np.nan for _ in columns], index=columns)
 
     @property
     def population_df(self) -> geopop.ItalyGeopopDataFrame:
@@ -80,14 +68,18 @@ class ItalyGeopop:
         str_indexed, code_indexed = self._generate_municipality_dfs(
             self.italy_geopop_df, include_geometry=self.include_geometry
         )
+        empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
+        str_indexed = dict(str_indexed.iterrows())
+        code_indexed = dict(code_indexed.iterrows())
 
+        @cache
         def get_data(x) -> pd.Series:
             x = str(x).strip().lower()
             try:
                 x = int(float(x))
-                return self._extract_serie(code_indexed, x)
+                return code_indexed.get(x, empty_serie)
             except Exception:
-                return self._extract_serie(str_indexed, x)
+                return str_indexed.get(x, empty_serie)
 
         return handle_return_cols(self._obj.apply(get_data), return_cols)
 
@@ -135,16 +127,24 @@ class ItalyGeopop:
             self.italy_geopop_df, include_geometry=self.include_geometry
         )
 
+        empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
+
+        str_indexed = dict(str_indexed.iterrows())
+        code_indexed = dict(code_indexed.iterrows())
+        short_str_indexed = dict(short_str_indexed.iterrows())
+
+        @cache
         def get_data(x) -> pd.Series:
             x = str(x).strip()
             try:
                 x = int(float(x))
-                return self._extract_serie(code_indexed, x)
+                return code_indexed.get(x, empty_serie)
             except ValueError:
                 if len(x) == 2:
-                    return self._extract_serie(short_str_indexed, x.upper())
+                    return short_str_indexed.get(x.upper(), empty_serie)
+
                 else:
-                    return self._extract_serie(str_indexed, x.lower())
+                    return str_indexed.get(x.lower(), empty_serie)
 
         return handle_return_cols(self._obj.apply(get_data), return_cols)
 
@@ -188,14 +188,19 @@ class ItalyGeopop:
         str_indexed, code_indexed = self._generate_region_dfs(
             self.italy_geopop_df, include_geometry=self.include_geometry
         )
+        empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
 
+        str_indexed = dict(str_indexed.iterrows())
+        code_indexed = dict(code_indexed.iterrows())
+
+        @cache
         def get_data(x) -> pd.Series:
             x = str(x).strip().lower()
             try:
                 x = int(float(x))
-                return self._extract_serie(code_indexed, x)
+                return code_indexed.get(x, empty_serie)
             except ValueError:
-                return self._extract_serie(str_indexed, x)
+                return str_indexed.get(x, empty_serie)
 
         return handle_return_cols(self._obj.apply(get_data), return_cols)
 

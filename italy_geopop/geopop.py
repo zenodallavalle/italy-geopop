@@ -63,7 +63,7 @@ class ItalyGeopopDataFrame(pd.DataFrame):
     def __init__(self) -> None:
         super().__init__(
             pd.read_csv(
-                os.path.join(_current_abs_dir, 'italy_geo_pop_2022.csv'),
+                os.path.join(_current_abs_dir, 'italy_geo_pop_municipalities.csv'),
                 na_values=[
                     '',
                     '#N/A',

@@ -31,9 +31,13 @@ ISTAT codes can be found [here](https://it.wikipedia.org/wiki/Codice_ISTAT) or [
 
 `pip install italy-geopop`, as simple as that.
 
-**GitHub**
+**GitHub - specific version (e.g. 0.1.1)**
 
-`pip install https://github.com/zenodallavalle/italy-geopop.git`
+`pip install git+https://github.com/zenodallavalle/italy-geopop.git@v0.1.1`
+
+**GitHub - latest (main branch)**
+
+`pip install git+https://github.com/zenodallavalle/italy-geopop.git@main`
 
 **GitHub - development branch**
 

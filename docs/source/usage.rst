@@ -63,6 +63,25 @@ Or you can use italy-geopop to get data for your `pd.Series <https://pandas.pyda
   :file: _static/assets/quick_usage_03.csv
   :header-rows: 1
 
+
+Smart functionalities
+-----------------------
+
+For region and province, you can also use the ``smart_from_region`` and ``smart_from_province`` methods.
+Those methods will try to guess the region or province from the input data and will return the data for the region or province only
+if the match is not ambiguous.
+
+.. code-block:: python
+  :lineno-start: 9
+
+  data = pd.Series(["Regione Lombardia", "Regione del Veneto", "Veneto o Lombardia", 15])
+  data.italy_geopop.smart_from_region()
+
+
+.. csv-table::
+  :file: _static/assets/quick_usage_04.csv
+  :header-rows: 1
+
 More
 -------
 Check out the complete guide for more informations.

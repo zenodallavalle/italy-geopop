@@ -97,6 +97,30 @@ def province_names() -> pd.Series:
 
 
 @pytest.fixture
+def province_name_complex() -> pd.Series:
+    """
+    Returns a pd.Series with a valid complex province name.
+    """
+    return pd.Series(['Università degli studi di Verona'])
+
+
+@pytest.fixture
+def province_name_complex_to_simple() -> pd.Series:
+    """
+    Returns a pd.Series with a the right simple name for province_name_complex above.
+    """
+    return pd.Series(['verona'])
+
+
+@pytest.fixture
+def not_unequivocal_province_name_complex() -> pd.Series:
+    """
+    Returns a pd.Series with a non-unequivocal complex province name.
+    """
+    return pd.Series(['Verona or Milano'])
+
+
+@pytest.fixture
 def province_names_short() -> pd.Series:
     """
     Returns a pd.Series with some valid provinces abbreviations.
@@ -131,6 +155,30 @@ def region_names() -> pd.Series:
             'Abruzzo',
         ]
     )
+
+
+@pytest.fixture
+def region_name_complex() -> pd.Series:
+    """
+    Returns a pd.Series with a valid complex region name.
+    """
+    return pd.Series(['Regione del Veneto'])
+
+
+@pytest.fixture
+def region_name_complex_to_simple() -> pd.Series:
+    """
+    Returns a pd.Series with a the right simple name for region_name_complex above.
+    """
+    return pd.Series(['veneto'])
+
+
+@pytest.fixture
+def not_unequivocal_region_name_complex() -> pd.Series:
+    """
+    Returns a pd.Series with a non-unequivocal complex region name.
+    """
+    return pd.Series(['Piemonte o Lombardia'])
 
 
 @pytest.fixture
@@ -434,3 +482,39 @@ def test_pandas_extension_find_correct_region_information_from_mixed_names_and_c
     output = output[expected.columns]
 
     assert (output != expected).sum().sum() == 0
+
+
+def test_pandas_extension_find_correct_province_information_from_complex_province_name(
+    province_name_complex, province_name_complex_to_simple
+):
+    with pandas_activate_context(include_geometry=False):
+        expected = province_name_complex_to_simple.italy_geopop.from_province()
+        output = province_name_complex.italy_geopop.smart_from_province()
+    assert (output != expected).sum().sum() == 0
+
+
+def test_pandas_extension_return_nan_for_non_unequivocal_province_name(
+    not_unequivocal_province_name_complex,
+):
+    with pandas_activate_context(include_geometry=False):
+        output = (
+            not_unequivocal_province_name_complex.italy_geopop.smart_from_province()
+        )
+    assert output.isna().all().all()
+
+
+def test_pandas_extension_find_correct_region_information_from_complex_region_name(
+    region_name_complex, region_name_complex_to_simple
+):
+    with pandas_activate_context(include_geometry=False):
+        expected = region_name_complex_to_simple.italy_geopop.from_region()
+        output = region_name_complex.italy_geopop.smart_from_region()
+    assert (output != expected).sum().sum() == 0
+
+
+def test_pandas_extension_return_nan_for_non_unequivocal_province_name(
+    not_unequivocal_region_name_complex,
+):
+    with pandas_activate_context(include_geometry=False):
+        output = not_unequivocal_region_name_complex.italy_geopop.smart_from_region()
+    assert output.isna().all().all()

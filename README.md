@@ -80,6 +80,17 @@ ISTAT codes can be found [here](https://it.wikipedia.org/wiki/Codice_ISTAT) or [
 | 1   | MULTIPOLYGON | Lombardia | 3           | [{'province_code': 12, 'p | 9943004.0  | 5061476.0    | 4881528.0    |
 | 2   | POLYGON      | Veneto    | 5           | [{'province_code': 23, 'p | 4847745.0  | 2467002.0    | 2380743.0    |
 
+```
+>>> pd.Series(["Regione Lombardia", "Regione del Veneto", "Veneto o Lombardia", 15]).italy_geopop.smart_from_region()
+```
+
+|     | geometry     | region    | region_code | provinces                 | population | population_F | population_M |
+| --- | ------------ | --------- | ----------- | ------------------------- | ---------- | ------------ | ------------ |
+| 0   | MULTIPOLYGON | Lombardia | 3.0         | [{'province_code': 12, 'p | 9943004.0  | 5061476.0    | 4881528.0    |
+| 1   | POLYGON      | Veneto    | 5.0         | [{'province_code': 23, 'p | 4847745.0  | 2467002.0    | 2380743.0    |
+| 2   | nan          | nan       | nan         | nan                       | nan        | nan          | nan          |
+| 3   | MULTIPOLYGON | Campania  | 15.0        | [{'province_code': 61, 'p | 5624420.0  | 2876843.0    | 2747577.0    |
+
 ## 📖 License
 
 Italy-geopop is distributed under Creative Commons license ([CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)). Full license can be read at [LICENSE](https://github.com/zenodallavalle/italy-geopop/blob/main/LICENSE).

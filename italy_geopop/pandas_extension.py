@@ -1,11 +1,10 @@
 from contextlib import contextmanager
 from functools import cache
-from os import stat
 import numpy as np
 import pandas as pd
 from warnings import warn
 
-from ._utils import handle_return_cols, simple_cache
+from ._utils import handle_return_cols, simple_cache, match_single_word
 from . import geopop
 
 
@@ -203,6 +202,76 @@ class ItalyGeopop:
                 return str_indexed.get(x, empty_serie)
 
         return handle_return_cols(self._obj.apply(get_data), return_cols)
+
+    def smart_from_province(self, return_cols=None) -> pd.DataFrame | pd.Series:
+        """Same as ``from_provinces`` but can understand more complex text. Values are returned only if match is unequivocal.
+
+
+        .. code-block:: python
+           :linenos:
+
+           >>> s = pd.Series(["Citta' di Brescia", "Università degli studi di Milano", "Milano o Verona", 5])
+           >>> s.italy_geopop.smart_from_province(return_cols='province')
+           0    Brescia
+           1     Milano
+           2        NaN
+           3       Asti
+           Name: province, dtype: object
+
+
+        """
+        str_indexed = self._generate_province_dfs(
+            self.italy_geopop_df, include_geometry=self.include_geometry
+        )[0]
+        ret = self.from_province()
+        nans = self._obj[ret[ret.region.isnull()].index].copy()
+
+        empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
+        str_indexed = dict(str_indexed.iterrows())
+
+        @cache
+        def get_data(x):
+            key = match_single_word(str_indexed.keys(), str(x).strip().lower())
+            return str_indexed.get(key, empty_serie)
+
+        ret = ret.fillna(nans.apply(get_data))
+
+        return handle_return_cols(ret, return_cols=return_cols)
+
+    def smart_from_region(self, return_cols=None) -> pd.DataFrame | pd.Series:
+        """Same as ``from_region`` but can understand more complex text. Values are returned only if match is unequivocal.
+
+
+        .. code-block:: python
+           :linenos:
+
+           >>> s = pd.Series(["Regione Lombardia", "Regione del Veneto", "Piemonte o Umbria?", 15])
+           >>> s.italy_geopop.smart_from_region(return_cols='region')
+           0    Lombardia
+           1       Veneto
+           2          NaN
+           3     Campania
+           Name: region, dtype: object
+
+
+        """
+        str_indexed = self._generate_region_dfs(
+            self.italy_geopop_df, include_geometry=self.include_geometry
+        )[0]
+        ret = self.from_region()
+        nans = self._obj[ret[ret.region.isnull()].index].copy()
+
+        empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
+        str_indexed = dict(str_indexed.iterrows())
+
+        @cache
+        def get_data(x):
+            key = match_single_word(str_indexed.keys(), str(x).strip().lower())
+            return str_indexed.get(key, empty_serie)
+
+        ret = ret.fillna(nans.apply(get_data))
+
+        return handle_return_cols(ret, return_cols=return_cols)
 
 
 def pandas_activate(include_geometry=False):

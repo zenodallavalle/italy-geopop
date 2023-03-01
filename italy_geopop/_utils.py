@@ -1,6 +1,6 @@
 from functools import wraps
 import pandas as pd
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 
 def handle_return_cols(return_df, return_cols) -> pd.DataFrame:
@@ -23,3 +23,23 @@ def simple_cache(fn: Callable) -> Callable:
 
     wrapper.cache = dict()
     return wrapper
+
+
+def match_single_word(words: Iterable[str], text: str) -> str | None:
+    """return the word, taken from a list of words, that is found in text only if it's the only match.
+
+    :param words: a list or iterable of words to be searched into text.
+    :type words: Iterable[str]
+    :param text: the source text into words are searched.
+    :type text: str
+    :return: the word, taken from a list of words, that is found in text only if it's the only match.
+    :rtype: str | None
+    """
+    n_matches = 0
+    match = None
+    for word in words:
+        if word in text:
+            n_matches += 1
+            match = word
+    if n_matches == 1:
+        return match

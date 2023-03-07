@@ -67,9 +67,8 @@ Or you can use italy-geopop to get data for your `pd.Series <https://pandas.pyda
 Smart functionalities
 -----------------------
 
-For region and province, you can also use the ``smart_from_region`` and ``smart_from_province`` methods.
-Those methods will try to guess the region or province from the input data and will return the data for the region or province only
-if the match is not ambiguous.
+``smart_from_municipality``, ``smart_from_region`` and ``smart_from_province`` methods are also available.
+Those methods will try to guess from the input data and will return the data only if the match is unequivocal.
 
 .. code-block:: python
   :lineno-start: 9

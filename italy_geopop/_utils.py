@@ -1,6 +1,7 @@
 from functools import wraps
 import pandas as pd
 from typing import Any, Callable, Iterable
+import re
 
 
 def handle_return_cols(return_df, return_cols) -> pd.DataFrame:
@@ -26,7 +27,7 @@ def simple_cache(fn: Callable) -> Callable:
 
 
 def match_single_word(words: Iterable[str], text: str) -> str | None:
-    """return the word, taken from a list of words, that is found in text only if it's the only match.
+    """return the word, taken from a list of words, that is found in text only if it's the only match. Word is searched as "exact word match".
 
     :param words: a list or iterable of words to be searched into text.
     :type words: Iterable[str]
@@ -38,7 +39,7 @@ def match_single_word(words: Iterable[str], text: str) -> str | None:
     n_matches = 0
     match = None
     for word in words:
-        if word in text:
+        if re.search(r'\b{}\b'.format(word), text):
             n_matches += 1
             match = word
     if n_matches == 1:

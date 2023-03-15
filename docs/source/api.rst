@@ -9,7 +9,7 @@ Data provided by the package
 Population data
 ********************
 
-Population data provided by ISTAT (Istituto Italiano di Statistica). Starting from version ``0.4.0`` the database contains data for every age from 0 to 100 years and for divided in male and female population.
+Population data provided by ISTAT (Istituto Italiano di Statistica). Starting from version ``0.4.0`` the database contains data for every age from 0 to 100 years and divided into males and females.
 Male data will have the suffix ``_M`` and female data will have the suffix ``_F`` while the sum of both males and females will have no suffix at all.
 
 .. important::

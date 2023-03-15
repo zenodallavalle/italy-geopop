@@ -135,7 +135,7 @@ class Geopop:
     def population_df(self) -> pd.DataFrame:
         """Method to get italian population data.
 
-        :return: a 2-dimensional dataframe with ``municipality_code`` as index and and many columns with population data in `long` format (columns: ``age``, ``F``, ``M`` and``tot``).
+        :return: a 2-dimensional dataframe with ``municipality_code`` as index and and many columns with population data in `long` format (columns: ``age``, ``F``, ``M`` and ``tot``).
         :rtype: pd.DataFrame
         """
 

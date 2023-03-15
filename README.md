@@ -117,7 +117,3 @@ You can find full docs on [italy-geopop.readthedocs.io](https://italy-geopop.rea
 If you experience an issue using this library first check the FAQ, you may find an immediate solution to your problem.
 
 If your problem is not listed or the proposed solution did not worked for you, please report bugs via GitHub issues [here](https://github.com/zenodallavalle/italy-geopop/issues) providing also a minimum reproducible example.
-
-```
-
-```

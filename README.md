@@ -107,7 +107,7 @@ Italy-geopop includes data from:
 
 ## 🔎 Full docs reference
 
-You can find full docs on [italy-geopop.readthedocs.io](https://italy-geopop.readthedocs.io/en/latest).
+You can find full docs on [italy-geopop.readthedocs.io](https://italy-geopop.readthedocs.io/).
 
 ## 👩‍💻 Contributes
 

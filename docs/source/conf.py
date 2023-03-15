@@ -1,6 +1,8 @@
 import os
 import sys
 
+latex_engine = "xelatex"
+
 root_abs_path = os.path.abspath('../..')
 sys.path.insert(0, root_abs_path)
 

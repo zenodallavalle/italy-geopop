@@ -20,6 +20,7 @@
 
 - Easy access to italian geospatial and population data
 - Easy geospatial plot made possible by the usage of [geopandas](https://geopandas.org/en/stable/)
+- Population data available by age and sex with customable age ranges
 - Easy linkage of italy-geopop data with your data made possible by using [pandas](https://pandas.pydata.org/) and the registration of italy-geopop as [pandas accessor](https://pandas.pydata.org/docs/development/extending.html)
 
 You only need a list of [municipalities](https://en.wikipedia.org/wiki/List_of_municipalities_of_Italy) (or municipality ISTAT codes), [provinces](https://en.wikipedia.org/wiki/Provinces_of_Italy) (or province ISTAT codes or province abbreviations (e.g. `Torino` -> `TO`)) and [regions](https://en.wikipedia.org/wiki/Regions_of_Italy) (or region ISTAT codes).

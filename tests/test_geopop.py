@@ -3,163 +3,219 @@ import pandas as pd
 import pytest
 import warnings
 
-from italy_geopop.geopop import ItalyGeopopDataFrame
+from italy_geopop.geopop import Geopop
 
-_required_columns = [
+_municipality_columns = [
     'municipality',
-    'municipality_code',
-    'province_code',
     'province',
+    'province_code',
     'province_short',
     'region',
     'region_code',
-    'population',
-    'population_M',
-    'population_F',
+]
+
+_province_columns = [
+    'region',
+    'region_code',
+    'province',
+    'province_short',
+    'municipalities',
+]
+
+_region_columns = [
+    'region',
+    'provinces',
+]
+
+_auto_population_limits_columns = [
+    '<3_F',
+    '3-11_F',
+    '11-19_F',
+    '19-25_F',
+    '25-50_F',
+    '50-65_F',
+    '65-75_F',
+    '>=75_F',
+    '<3_M',
+    '3-11_M',
+    '11-19_M',
+    '19-25_M',
+    '25-50_M',
+    '50-65_M',
+    '65-75_M',
+    '>=75_M',
+    '<3',
+    '3-11',
+    '11-19',
+    '19-25',
+    '25-50',
+    '50-65',
+    '65-75',
+    '>=75',
 ]
 
 
-def test_initialization():
-    df = ItalyGeopopDataFrame()
-    assert isinstance(df, (ItalyGeopopDataFrame, pd.DataFrame))
-
-
 @pytest.fixture
-def geopop_df() -> ItalyGeopopDataFrame:
-    return ItalyGeopopDataFrame()
+def gp() -> Geopop:
+    return Geopop()
 
 
-def test_generate_municipality_records(geopop_df):
-    for col in _required_columns:
-        pytest.assume(col in geopop_df.columns)
+@pytest.mark.parametrize(
+    'df',
+    [
+        Geopop().italy_municipalities,
+        Geopop().italy_provinces,
+        Geopop().italy_regions,
+        Geopop().population_df,
+        Geopop().get_italian_population_for_municipalites(),
+        Geopop().get_italian_population_for_provinces(),
+        Geopop().get_italian_population_for_regions(),
+    ],
+)
+def test_is_pandas_instance(df):
+    assert isinstance(df, pd.DataFrame)
 
 
-def test_population_male_female_if_present_is_coherent(geopop_df):
-    geopop_df['_check_population'] = (
-        geopop_df.population_M + geopop_df.population_F
+@pytest.mark.parametrize(
+    'df',
+    [
+        Geopop().italy_municipalities_geometry,
+        Geopop().italy_provinces_geometry,
+        Geopop().italy_regions_geometry,
+    ],
+)
+def test_is_geopandas_instance(df):
+    assert isinstance(df, gpd.GeoDataFrame)
+
+
+@pytest.mark.parametrize(
+    'df,index,columns_list',
+    [
+        (
+            Geopop().italy_municipalities,
+            'municipality_code',
+            _municipality_columns,
+        ),
+        (
+            Geopop().italy_provinces,
+            'province_code',
+            _province_columns,
+        ),
+        (
+            Geopop().italy_regions,
+            'region_code',
+            _region_columns,
+        ),
+        (
+            Geopop().population_df,
+            'municipality_code',
+            ['age', 'F', 'M', 'tot'],
+        ),
+        (
+            Geopop().get_italian_population_for_municipalites(),
+            'municipality_code',
+            _auto_population_limits_columns,
+        ),
+        (
+            Geopop().get_italian_population_for_provinces(),
+            'province_code',
+            _auto_population_limits_columns,
+        ),
+        (
+            Geopop().get_italian_population_for_regions(),
+            'region_code',
+            _auto_population_limits_columns,
+        ),
+        (Geopop().italy_municipalities_geometry, 'municipality_code', ['geometry']),
+        (Geopop().italy_provinces_geometry, 'province_code', ['geometry']),
+        (Geopop().italy_regions_geometry, 'region_code', ['geometry']),
+    ],
+)
+def test_dataframe_has_the_right_index_and_columns(df, index, columns_list):
+    assert df.index.name == index
+    df_columns = list(df.columns)
+
+    for col in columns_list:
+        assert col in df_columns
+        if col in df_columns:
+            df_columns.remove(col)
+    if len(df_columns):
+        raise AssertionError(
+            'Columns "{}" are not expected in dataframe'.format(df_columns)
+        )
+
+
+def test_population_male_female_if_present_is_coherent(gp):
+    municipality_pop_df = gp.compose_df(level='municipality', population_limits='total')
+    municipality_pop_df['_check_population'] = (
+        municipality_pop_df.population_M + municipality_pop_df.population_F
     ).round()
-    diff_df = geopop_df[geopop_df.population != geopop_df._check_population].copy()
+    diff_df = municipality_pop_df[
+        municipality_pop_df.population != municipality_pop_df._check_population
+    ].copy()
     diff_df = diff_df.dropna(
         subset=['population_M', 'population_F', 'population'], how='all'
     )
     if len(diff_df.population):
         raise AssertionError(
-            'population_M + population_F differs from population in for municipalities: {}.'.format(
+            'population_M + population_F differs from population for municipalities: {}.'.format(
                 ', '.join(diff_df.municipality)
             )
         )
 
 
-def test_regions_are_20(geopop_df):
-    assert len(geopop_df.region.unique()) == 20
+@pytest.mark.parametrize(
+    'df,expected_length',
+    [
+        (Geopop().italy_municipalities, 7904),
+        (Geopop().italy_provinces, 107),
+        (Geopop().italy_regions, 20),
+        # (
+        #     Geopop().get_italian_population_for_municipalites(),
+        #     7904,
+        # ),
+        (Geopop().get_italian_population_for_provinces(), 107),
+        (Geopop().get_italian_population_for_regions(), 20),
+        # (Geopop().italy_municipalities_geometry, 7904),
+        (Geopop().italy_provinces_geometry, 107),
+        (Geopop().italy_regions_geometry, 20),
+        (Geopop().compose_df(level='municipality'), 7904),
+        (Geopop().compose_df(level='province'), 107),
+        (Geopop().compose_df(level='region'), 20),
+    ],
+)
+def test_series_length_is_right(df, expected_length):
+    assert len(df) == expected_length
 
 
-def test_region_codes_are_20(geopop_df):
-    assert len(geopop_df.region_code.unique()) == 20
-
-
-def test_provinces_are_107(geopop_df):
-    assert len(geopop_df.province.unique()) == 107
-
-
-def test_provinces_short_are_107(geopop_df):
-    assert len(geopop_df.province_short.unique()) == 107
-
-
-def test_province_codes_are_107(geopop_df):
-    assert len(geopop_df.province_code.unique()) == 107
-
-
-def test_municipality_has_no_null_values(geopop_df):
-    assert geopop_df.municipality.isnull().sum() == 0
-
-
-def test_municipality_code_has_no_null_values(geopop_df):
-    assert geopop_df.municipality_code.isnull().sum() == 0
-
-
-def test_province_code_has_no_null_values(geopop_df):
-    assert geopop_df.province_code.isnull().sum() == 0
-
-
-def test_province_has_no_null_values(geopop_df):
-    assert geopop_df.province.isnull().sum() == 0
-
-
-def test_province_short_has_no_null_values(geopop_df):
-    assert geopop_df.province_short.isnull().sum() == 0
-
-
-def test_region_has_no_null_values(geopop_df):
-    assert geopop_df.region.isnull().sum() == 0
-
-
-def test_region_code_has_no_null_values(geopop_df):
-    assert geopop_df.region_code.isnull().sum() == 0
-
-
-def test_if_population_data_is_missing(geopop_df):
-    if geopop_df.population_M.isnull().sum():
-        na_municipalities = geopop_df.municipality.loc[geopop_df.population_M.isnull()]
+def test_if_population_data_is_missing(gp):
+    municipality_pop_df = gp.compose_df(level='municipality', population_limits='total')
+    if municipality_pop_df.isnull().sum().sum():
+        na_municipalities = municipality_pop_df.municipality.loc[
+            municipality_pop_df.population_M.isnull()
+        ]
         warnings.warn(
             'population_M mussing for municipalities: {}.'.format(
                 ', '.join(na_municipalities)
             )
         )
 
-    if geopop_df.population_F.isnull().sum():
-        na_municipalities = geopop_df.municipality.loc[geopop_df.population_F.isnull()]
+    if municipality_pop_df.isnull().sum().sum():
+        na_municipalities = municipality_pop_df.municipality.loc[
+            municipality_pop_df.population_M.isnull()
+        ]
         warnings.warn(
             'population_F mussing for municipalities: {}.'.format(
                 ', '.join(na_municipalities)
             )
         )
 
-    if geopop_df.population.isnull().sum():
-        na_municipalities = geopop_df.municipality.loc[geopop_df.population.isnull()]
+    if municipality_pop_df.isnull().sum().sum():
+        na_municipalities = municipality_pop_df.municipality.loc[
+            municipality_pop_df.population_M.isnull()
+        ]
         warnings.warn(
             'population mussing for municipalities: {}.'.format(
                 ', '.join(na_municipalities)
             )
         )
-
-
-def test_ItalyGeopopDataFrame_get_municipalities_geometry_is_geodataframe_instance(
-    geopop_df,
-):
-    assert isinstance(geopop_df.get_municipalities_geometry(), gpd.GeoDataFrame)
-
-
-def test_ItalyGeopopDataFrame_get_municipalities_geometry_has_geometry_column(
-    geopop_df,
-):
-    assert hasattr(geopop_df.get_municipalities_geometry(), 'geometry')
-
-
-def test_ItalyGeopopDataFrame_get_provinces_geometry_is_geodataframe_instance(
-    geopop_df,
-):
-    assert isinstance(geopop_df.get_provinces_geometry(), gpd.GeoDataFrame)
-
-
-def test_ItalyGeopopDataFrame_get_provinces_geometry_has_geometry_column(geopop_df):
-    assert hasattr(geopop_df.get_provinces_geometry(), 'geometry')
-
-
-def test_ItalyGeopopDataFrame_get_provinces_geometry_has_107_rows(geopop_df):
-    assert len(geopop_df.get_provinces_geometry()) == 107
-
-
-def test_ItalyGeopopDataFrame_get_regions_geometry_is_geodataframe_instance(geopop_df):
-    assert isinstance(geopop_df.get_regions_geometry(), gpd.GeoDataFrame)
-
-
-def test_ItalyGeopopDataFrame_get_regions_geometry_has_geometry_column(geopop_df):
-    assert hasattr(geopop_df.get_regions_geometry(), 'geometry')
-
-
-def test_ItalyGeopopDataFrame_get_regions_geometry_has_20_rows(geopop_df):
-    assert len(geopop_df.get_regions_geometry()) == 20
-
-
-## Add test for aggreagate_ methods

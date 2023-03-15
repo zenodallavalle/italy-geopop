@@ -1,4 +1,4 @@
-,geometry,municipality,municipality_code,province_code,province,province_short,region,region_code,population,population_F,population_M
-0,MULTIPOLYGON ,Torino,1272,1,Torino,TO,Piemonte,1,848748.0,441686.0,407062.0
-1,MULTIPOLYGON ,Agliè,1001,1,Torino,TO,Piemonte,1,2562.0,1347.0,1215.0
-2,MULTIPOLYGON ,Airasca,1002,1,Torino,TO,Piemonte,1,3660.0,1793.0,1867.0
+,municipality_code,municipality,province_code,province,province_short,region,region_code,geometry,population_F,population_M,population
+0,1272,Torino,1,Torino,TO,Piemonte,1,MULTIPOLYGON ,441686.0,407062.0,848748.0
+1,1001,Agliè,1,Torino,TO,Piemonte,1,MULTIPOLYGON ,1347.0,1215.0,2562.0
+2,1002,Airasca,1,Torino,TO,Piemonte,1,MULTIPOLYGON ,1793.0,1867.0,3660.0

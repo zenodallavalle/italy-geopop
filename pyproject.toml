@@ -18,7 +18,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 license = {file = "LICENSE"}
-dependencies = ["geopandas>=0.12.2", "numpy>=1.24.0", "pandas>=1.5.0"]
+dependencies = ["geopandas>=0.12.2", "numpy>=1.24.0", "pandas>=1.5.0", "pyarrow>=11.0.0"]
 
 [project.optional-dependencies]
 dev = [
@@ -33,6 +33,13 @@ test = [
   "pytest-assume>=2.4.3"
 ]
 docs = [
+  "sphinx>=6.0.0",
+  "sphinx_rtd_theme>=1.2.0",
+  "matplotlib>=3.7.0"
+]
+
+docs-build_material = [
+  "jupyter>=1.0.0",
   "sphinx>=6.0.0",
   "sphinx_rtd_theme>=1.2.0",
   "matplotlib>=3.7.0"

@@ -1,8 +1,11 @@
 from contextlib import contextmanager
 from functools import cache
+import re
 import numpy as np
 import pandas as pd
 from warnings import warn
+
+from typing import Any
 
 from ._utils import handle_return_cols, simple_cache, match_single_word
 from . import geopop
@@ -14,50 +17,74 @@ class ItalyGeopop:
     Instead, from a ``pandas.Series`` object you can access its methods via ``italy_geopop`` attribute.
     """
 
-    def __init__(self, pandas_obj) -> None:
+    def __init__(self, pandas_obj: Any, include_geometry: bool = False) -> None:
+        self.geopop = geopop.Geopop()
+        self.include_geometry = include_geometry
         self._obj = pandas_obj
 
     @classmethod
     def _generate_empty_serie(cls, columns) -> pd.Series:
         return pd.Series([np.nan for _ in columns], index=columns)
 
-    @property
-    def population_df(self) -> geopop.ItalyGeopopDataFrame:
-        """Get all italy-geopop data in a subclass of ``pandas.DataFrame.``
-
-        :return: All population (and geospatials if accessor was initialized with ``include_geometry=True``) data for every municipality.
-        :rtype: geopop.ItalyGeopopDataFrame
-        """
-        return self.italy_geopop_df
-
-    @staticmethod
-    @simple_cache
-    def _generate_municipality_dfs(
-        italy_geopop_df: geopop.ItalyGeopopDataFrame, include_geometry: bool
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        if not include_geometry:
-            temp_df = italy_geopop_df.copy()
-        else:
-            temp_df = pd.merge(
-                italy_geopop_df.get_municipalities_geometry(),
-                italy_geopop_df,
-                how='outer',
-                right_on='municipality_code',
-                left_index=True,
+    def get_population_data(
+        self,
+        level: str = 'municipality',
+        include_geometry: bool = False,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame:
+        """Same as :py:meth:`italy_geopop.geopop.Geopop.compose_df`."""
+        level = level.lower().strip()
+        if level in set(['municipality', 'province', 'region']):
+            return self.geopop.compose_df(
+                level=level,
+                population_limits=population_limits,
+                population_labels=population_labels,
+                include_geometry=include_geometry,
             )
+
+        else:
+            raise ValueError(
+                f'level must be "municipality", "province" or "region" not "{level}"'
+            )
+
+    def _generate_municipality_dfs(
+        self,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+        include_geometry: bool = False,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        temp_df = self.geopop.compose_df(
+            level='municipality',
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=include_geometry,
+        )
         temp_df['_index'] = temp_df.municipality.str.lower()
         str_indexed = temp_df.set_index('_index')
         temp_df['_index'] = temp_df.municipality_code
         code_indexed = temp_df.set_index('_index')
         return str_indexed, code_indexed
 
-    def from_municipality(self, return_cols=None) -> pd.DataFrame:
+    def from_municipality(
+        self,
+        return_cols: list | str | re.Pattern | None = None,
+        regex: bool = False,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame:
         """Get data for municipalities.
         Input series can contain municipalities names or municipalities istat codes; *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
-        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. The available fields are listed above, defaults to None.
-        :type include_geometry: bool, optional
+        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. If is an instance of re.Pattern or is a string and regex param is True columns will be filtered and returned only if their names match the regular expression. The available fields are listed above, defaults to None.
+        :type return_cols: list[str] | None, optional.
+        :param regex: if True, return_cols is interpreted as a regex pattern, defaults to False.
+        :type regex: bool, optional.
+        :param population_limits: see above, can be a list of int or ``'total'`` or ``'auto'``, defaults to 'auto'.
+        :type population_limits: list[int] | str, optional.
+        :param population_labels: a list of strings that defines labels name, if None the :ref:`default label naming rule<default-label-naming-rule>` will be used, defaults to None.
+        :type population_labels: list[str] | None, optional.
 
         :raises KeyError: if return_cols is or contains a column not listed above or includes ``geometry`` and accessor was intialize without geometry data.
 
@@ -65,7 +92,9 @@ class ItalyGeopop:
         :rtype: pandas.DataFrame
         """
         str_indexed, code_indexed = self._generate_municipality_dfs(
-            self.italy_geopop_df, include_geometry=self.include_geometry
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=self.include_geometry,
         )
         empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
         str_indexed = dict(str_indexed.iterrows())
@@ -80,24 +109,20 @@ class ItalyGeopop:
             except Exception:
                 return str_indexed.get(x, empty_serie)
 
-        return handle_return_cols(self._obj.apply(get_data), return_cols)
+        return handle_return_cols(self._obj.apply(get_data), return_cols, regex)
 
-    @staticmethod
-    @simple_cache
     def _generate_province_dfs(
-        italy_geopop_df: geopop.ItalyGeopopDataFrame, include_geometry: bool
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        if not include_geometry:
-            temp_df = italy_geopop_df.aggregate_province()
-        else:
-            temp_df = pd.merge(
-                italy_geopop_df.get_provinces_geometry(),
-                italy_geopop_df.aggregate_province(),
-                how='outer',
-                right_on='province_code',
-                left_index=True,
-            )
-
+        self,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+        include_geometry: bool = False,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        temp_df = self.geopop.compose_df(
+            level='province',
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=include_geometry,
+        )
         temp_df['_index'] = temp_df.province.str.lower()
         str_indexed = temp_df.set_index('_index')
         temp_df['_index'] = temp_df.province_code
@@ -106,13 +131,25 @@ class ItalyGeopop:
         short_str_indexed = temp_df.set_index('_index')
         return str_indexed, code_indexed, short_str_indexed
 
-    def from_province(self, return_cols=None) -> pd.DataFrame:
+    def from_province(
+        self,
+        return_cols: list | str | re.Pattern | None = None,
+        regex: bool = False,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame:
         """Get data for provinces.
         Input series can contain provinces names, provinces abbreviations or provinces istat codes; *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
-        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. The available fields are listed above, defaults to None.
-        :type include_geometry: bool, optional
+        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. If is an instance of re.Pattern or is a string and regex param is True columns will be filtered and returned only if their names match the regular expression. The available fields are listed above, defaults to None.
+        :type return_cols: list[str] | None, optional.
+        :param regex: if True, return_cols is interpreted as a regex pattern, defaults to False.
+        :type regex: bool, optional.
+        :param population_limits: see above, can be a list of int or ``'total'`` or ``'auto'``, defaults to 'auto'.
+        :type population_limits: list[int] | str, optional.
+        :param population_labels: a list of strings that defines labels name, if None the :ref:`default label naming rule<default-label-naming-rule>` will be used, defaults to None.
+        :type population_labels: list[str] | None, optional.
 
         .. note::
             To understand how ``municipalities`` are grouped, see above :ref:`Municipality data <municipality-data>`.
@@ -123,7 +160,9 @@ class ItalyGeopop:
         :rtype: pandas.DataFrame
         """
         str_indexed, code_indexed, short_str_indexed = self._generate_province_dfs(
-            self.italy_geopop_df, include_geometry=self.include_geometry
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=self.include_geometry,
         )
 
         empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
@@ -145,36 +184,45 @@ class ItalyGeopop:
                 else:
                     return str_indexed.get(x.lower(), empty_serie)
 
-        return handle_return_cols(self._obj.apply(get_data), return_cols)
+        return handle_return_cols(self._obj.apply(get_data), return_cols, regex)
 
-    @staticmethod
-    @simple_cache
     def _generate_region_dfs(
-        italy_geopop_df: geopop.ItalyGeopopDataFrame, include_geometry: bool
+        self,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+        include_geometry: bool = False,
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        if not include_geometry:
-            temp_df = italy_geopop_df.aggregate_region()
-        else:
-            temp_df = pd.merge(
-                italy_geopop_df.get_regions_geometry(),
-                italy_geopop_df.aggregate_region(),
-                how='outer',
-                right_on='region_code',
-                left_index=True,
-            )
+        temp_df = self.geopop.compose_df(
+            level='region',
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=include_geometry,
+        )
         temp_df['_index'] = temp_df.region.str.lower()
         str_indexed = temp_df.set_index('_index')
         temp_df['_index'] = temp_df.region_code
         code_indexed = temp_df.set_index('_index')
         return str_indexed, code_indexed
 
-    def from_region(self, return_cols=None) -> pd.DataFrame:
+    def from_region(
+        self,
+        return_cols: list | str | re.Pattern | None = None,
+        regex: bool = False,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame:
         """Get data for regions.
         Input series can contain regions names or regions istat codes; *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
-        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. The available fields are listed above, defaults to None.
-        :type include_geometry: bool, optional
+        :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. If is an instance of re.Pattern or is a string and regex param is True columns will be filtered and returned only if their names match the regular expression. The available fields are listed above, defaults to None.
+        :type return_cols: list[str] | None, optional.
+        :param regex: if True, return_cols is interpreted as a regex pattern, defaults to False.
+        :type regex: bool, optional.
+        :param population_limits: see above, can be a list of int or ``'total'`` or ``'auto'``, defaults to 'auto'.
+        :type population_limits: list[int] | str, optional.
+        :param population_labels: a list of strings that defines labels name, if None the :ref:`default label naming rule<default-label-naming-rule>` will be used, defaults to None.
+        :type population_labels: list[str] | None, optional.
 
         .. note::
             To understand how ``provinces`` are grouped, see above :ref:`Province data <province-data>`.
@@ -185,7 +233,9 @@ class ItalyGeopop:
         :rtype: pandas.DataFrame
         """
         str_indexed, code_indexed = self._generate_region_dfs(
-            self.italy_geopop_df, include_geometry=self.include_geometry
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=self.include_geometry,
         )
         empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
 
@@ -201,9 +251,15 @@ class ItalyGeopop:
             except ValueError:
                 return str_indexed.get(x, empty_serie)
 
-        return handle_return_cols(self._obj.apply(get_data), return_cols)
+        return handle_return_cols(self._obj.apply(get_data), return_cols, regex)
 
-    def smart_from_municipality(self, return_cols=None) -> pd.DataFrame | pd.Series:
+    def smart_from_municipality(
+        self,
+        return_cols: list | str | re.Pattern | None = None,
+        regex: bool = False,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame | pd.Series:
         """Same as ``from_municipality`` but can understand more complex text. Values are returned only if match is unequivocal.
 
 
@@ -221,9 +277,14 @@ class ItalyGeopop:
 
         """
         str_indexed = self._generate_municipality_dfs(
-            self.italy_geopop_df, include_geometry=self.include_geometry
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=self.include_geometry,
         )[0]
-        ret = self.from_municipality()
+        ret = self.from_municipality(
+            population_limits=population_limits,
+            population_labels=population_labels,
+        )
         nans = self._obj[ret[ret.municipality.isnull()].index].copy()
 
         empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
@@ -236,9 +297,15 @@ class ItalyGeopop:
 
         ret = ret.fillna(nans.apply(get_data))
 
-        return handle_return_cols(ret, return_cols=return_cols)
+        return handle_return_cols(ret, return_cols, regex)
 
-    def smart_from_province(self, return_cols=None) -> pd.DataFrame | pd.Series:
+    def smart_from_province(
+        self,
+        return_cols: list | str | re.Pattern | None = None,
+        regex: bool = False,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame | pd.Series:
         """Same as ``from_province`` but can understand more complex text. Values are returned only if match is unequivocal.
 
 
@@ -256,9 +323,14 @@ class ItalyGeopop:
 
         """
         str_indexed = self._generate_province_dfs(
-            self.italy_geopop_df, include_geometry=self.include_geometry
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=self.include_geometry,
         )[0]
-        ret = self.from_province()
+        ret = self.from_province(
+            population_limits=population_limits,
+            population_labels=population_labels,
+        )
         nans = self._obj[ret[ret.region.isnull()].index].copy()
 
         empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
@@ -271,9 +343,15 @@ class ItalyGeopop:
 
         ret = ret.fillna(nans.apply(get_data))
 
-        return handle_return_cols(ret, return_cols=return_cols)
+        return handle_return_cols(ret, return_cols, regex)
 
-    def smart_from_region(self, return_cols=None) -> pd.DataFrame | pd.Series:
+    def smart_from_region(
+        self,
+        return_cols: list | str | re.Pattern | None = None,
+        regex: bool = False,
+        population_limits: list | str = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame | pd.Series:
         """Same as ``from_region`` but can understand more complex text. Values are returned only if match is unequivocal.
 
 
@@ -291,9 +369,14 @@ class ItalyGeopop:
 
         """
         str_indexed = self._generate_region_dfs(
-            self.italy_geopop_df, include_geometry=self.include_geometry
+            population_limits=population_limits,
+            population_labels=population_labels,
+            include_geometry=self.include_geometry,
         )[0]
-        ret = self.from_region()
+        ret = self.from_region(
+            population_limits=population_limits,
+            population_labels=population_labels,
+        )
         nans = self._obj[ret[ret.region.isnull()].index].copy()
 
         empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
@@ -306,14 +389,14 @@ class ItalyGeopop:
 
         ret = ret.fillna(nans.apply(get_data))
 
-        return handle_return_cols(ret, return_cols=return_cols)
+        return handle_return_cols(ret, return_cols, regex)
 
 
 def pandas_activate(include_geometry=False):
     """Activate pandas extension registering class :py:class:ItalyGeopop as pandas.Series `accessor <https://pandas.pydata.org/docs/development/extending.html>`_ named ``italy_geopop``.
 
-    :param include_geometry: specifies if geometry column should also be returned when accessor is used, defaults to False
-    :type include_geometry: bool, optional
+    :param include_geometry: specifies if geometry column should also be returned when accessor is used, defaults to False.
+    :type include_geometry: bool, optional.
 
     :return: None
 
@@ -324,9 +407,7 @@ def pandas_activate(include_geometry=False):
     @pd.api.extensions.register_series_accessor('italy_geopop')
     class Accessor(ItalyGeopop):
         def __init__(self, pandas_obj) -> None:
-            self.italy_geopop_df = geopop.ItalyGeopopDataFrame()
-            self.include_geometry = include_geometry
-            super().__init__(pandas_obj)
+            super().__init__(pandas_obj, include_geometry=include_geometry)
 
 
 @contextmanager

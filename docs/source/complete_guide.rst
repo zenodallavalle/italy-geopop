@@ -140,7 +140,7 @@ At least we need to adjust the number of beds for province's population and ital
 .. code-block:: python
   :lineno-start: 23
   
-  df['population'] = df.province_short.italy_geopop.from_province(return_cols='population')
+  df['population'] = df.province_short.italy_geopop.from_province(return_cols='population', population_limits='total')
   df['beds_per_capita'] = df.beds / df.population
   df.head()
 
@@ -210,7 +210,7 @@ Then we recalculate the ``beds_per_capita`` column dividing number of region's h
 .. code-block:: python
   :lineno-start: 38
 
-  df[['geometry', 'population']] = df.region_code.italy_geopop.from_region(return_cols=['geometry', 'population'])
+  df[['geometry', 'population']] = df.region_code.italy_geopop.from_region(return_cols=['geometry', 'population'], population_limits='total')
   df['beds_per_capita'] = df.beds / df.population
   df = gpd.GeoDataFrame(df)
 

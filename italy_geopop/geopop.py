@@ -2,174 +2,349 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import os
+from warnings import warn
+
+from ._utils import (
+    cache,
+    generate_labels_for_age_cutoffs,
+    aggregate_province_pop,
+    aggregate_region_pop,
+    prepare_limits,
+)
 
 _current_abs_dir = os.path.dirname(os.path.realpath(__file__))
+_data_abs_dir = os.path.join(_current_abs_dir, 'data')
+
+_default_age_cutoffs = [0, 3, 11, 19, 25, 50, 65, 75, 120]
 
 
-class ItalyGeopopDataFrame(pd.DataFrame):
-    """A subclass of `pandas.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_ that contains italian population from ISTAT."""
+class Geopop:
+    """A class that contains italian geospatial and population data."""
 
-    @classmethod
-    def _generate_municipality_records(cls, df) -> pd.Series:
-        data = df[['municipality_code', 'municipality']].to_dict('records')
-        return pd.Series([data], index=['municipalities'])
+    @property
+    def italy_municipalities(self) -> pd.DataFrame:
+        """Property to get italian municipalities data.
 
-    @classmethod
-    def _generate_province_records(cls, df) -> pd.Series:
-        ret = (
-            df.groupby(['province_code', 'province', 'province_short'])
-            .apply(cls._generate_municipality_records)
-            .reset_index()
-        )
-        data = ret.to_dict('records')
-        return pd.Series([data], index=['provinces'])
+        :return: a 2-dimensional dataframe with ``municipality_code`` as index and ``municipality``, ``province_code``, ``province``, ``province_short``, ``region``, ``region_code`` as columns.
+        :rtype: pd.DataFrame
+        """
 
-    @classmethod
-    def _aggregate_province(cls, df) -> pd.Series:
-        left_row = cls._generate_municipality_records(df)
-        right_row = (
-            df[
-                [
-                    'province',
-                    'province_code',
-                    'province_short',
-                    'region',
-                    'region_code',
-                    'population',
-                    'population_F',
-                    'population_M',
-                ]
-            ]
-            .groupby(['province', 'province_code', 'province_short'])
-            .agg(
-                {
-                    'region': 'first',
-                    'region_code': 'first',
-                    'population': 'sum',
-                    'population_F': 'sum',
-                    'population_M': 'sum',
-                }
+        if not hasattr(self, '_italy_municipalities'):
+            setattr(
+                self,
+                '_italy_municipalities',
+                pd.read_feather(
+                    os.path.join(_data_abs_dir, 'italy_municipalities_2022.feather'),
+                ).set_index('municipality_code'),
             )
-            .iloc[0, :]
-        )
-        return pd.concat([left_row, right_row])
+        return self._italy_municipalities
 
-    @classmethod
-    def _aggregate_region(cls, df) -> pd.Series:
-        left_row = cls._generate_province_records(df)
-        right_row = df[['population', 'population_F', 'population_M']].sum()
-        return pd.concat([left_row, right_row])
+    @property
+    def italy_provinces(self) -> pd.DataFrame:
+        """Property to get italian provinces data.
 
-    def __init__(self) -> None:
-        super().__init__(
-            pd.read_csv(
-                os.path.join(_current_abs_dir, 'italy_geo_pop_municipalities.csv'),
-                na_values=[
-                    '',
-                    '#N/A',
-                    '#N/A N/A',
-                    '#NA',
-                    '-1.#IND',
-                    '-1.#QNAN',
-                    '-NaN',
-                    '-nan',
-                    '1.#IND',
-                    '1.#QNAN',
-                    '<NA>',
-                    'N/A',
-                    'NULL',
-                    'NaN',
-                    'n/a',
-                    'nan',
-                    'null',
-                    # 'NA' #This is Napoli province abbreviation
-                ],
-                keep_default_na=False,
-                dtype={
-                    'population_M': np.float64,
-                    'population_F': np.float64,
-                    'population': np.float64,
-                },
+        .. note::
+            To understand how ``municipalities`` are grouped, see above :ref:`Municipality data <municipality-data>`.
+
+        :return: a 2-dimensional dataframe with ``province_code`` as index and ``province``, ``province_short``, ``municipalities``, ``region``, ``region_code`` as columns.
+        :rtype: pd.DataFrame
+        """
+        if not hasattr(self, '_italy_provinces'):
+            setattr(
+                self,
+                '_italy_provinces',
+                pd.read_feather(
+                    os.path.join(_data_abs_dir, 'italy_provinces_2022.feather'),
+                ).set_index('province_code'),
             )
-        )
+        return self._italy_provinces
 
-    def aggregate_province(self) -> pd.DataFrame:
-        """Aggregate provinces.
+    @property
+    def italy_regions(self) -> pd.DataFrame:
+        """Property to get italian regions data.
 
-        :return: 2-dimensional dataframe with provinces, provinces codes, provinces abbreviations, regions, regions code, municipalities (as a list of municipality records (see :ref:`municipality data <municipality-data>`)) and population data for every province.
-        :rtype: pandas.DataFrame
-        """
-        return (
-            self.groupby(['province', 'province_code', 'province_short'])
-            .apply(ItalyGeopopDataFrame._aggregate_province)
-            .reset_index()
-        )
+        .. note::
+            To understand how ``provinces`` are grouped, see above :ref:`Province data <province-data>`.
 
-    def aggregate_region(self) -> pd.DataFrame:
-        """Aggregate provinces.
-
-        :return: 2-dimensional dataframe with regions, regions code, provinces (as a list of provinces records (see :ref:`province data <province-data>`)) and population data for every region.
-        :rtype: pandas.DataFrame
-        """
-        return (
-            self.groupby(['region', 'region_code'])
-            .apply(ItalyGeopopDataFrame._aggregate_region)
-            .reset_index()
-        )
-
-    @classmethod
-    def get_municipalities_geometry(cls) -> pd.DataFrame:
-        """Classmethod to get geospatial data for plotting municipalities.
-
-        :return: a 2-dimensional dataframe with one column, ``geometry``, and ``municipality_code`` as index.
+        :return: a 2-dimensional dataframe with ``region_code`` as index and ``region``, ``provinces`` as column.
         :rtype: pd.DataFrame
         """
-        data = gpd.read_file(
-            os.path.join(_current_abs_dir, 'limits_IT_municipalities.geojson')
-        )
-        cols_rename = {
-            'com_istat_code_num': 'municipality_code',
-            'geometry': 'geometry',
-        }
 
-        data = data.rename(columns=cols_rename)
-        data = data[cols_rename.values()].set_index('municipality_code')
-        return data
+        if not hasattr(self, '_italy_regions'):
+            setattr(
+                self,
+                '_italy_regions',
+                pd.read_feather(
+                    os.path.join(_data_abs_dir, 'italy_regions_2022.feather'),
+                ).set_index('region_code'),
+            )
+        return self._italy_regions
 
-    @classmethod
-    def get_provinces_geometry(cls) -> pd.DataFrame:
-        """Classmethod to get geospatial data for plotting provinces.
+    @property
+    def italy_municipalities_geometry(self) -> pd.DataFrame:
+        """Property to get geospatial data for plotting municipalities.
 
-        :return: a 2-dimensional dataframe with one column, ``geometry``, and ``province_code`` as index.
+        :return: a 2-dimensional dataframe with ``municipality_code`` as index and ``geometry`` as column.
         :rtype: pd.DataFrame
         """
-        file = gpd.read_file(
-            os.path.join(_current_abs_dir, './limits_IT_provinces.geojson')
-        )
-        cols_rename = {
-            'prov_istat_code_num': 'province_code',
-            'geometry': 'geometry',
-        }
+        if not hasattr(self, '_italy_municipalities_geometry'):
+            setattr(
+                self,
+                '_italy_municipalities_geometry',
+                gpd.read_feather(
+                    os.path.join(_data_abs_dir, 'italy_geo_municipalities.feather')
+                ).set_index('municipality_code'),
+            )
+        return self._italy_municipalities_geometry
 
-        file = file.rename(columns=cols_rename)
-        file = file[cols_rename.values()].set_index('province_code')
-        return file
+    @property
+    def italy_provinces_geometry(self) -> pd.DataFrame:
+        """Method to get geospatial data for plotting provinces.
 
-    @classmethod
-    def get_regions_geometry(cls) -> pd.DataFrame:
-        """Classmethod to get geospatial data for plotting regions.
-
-        :return: a 2-dimensional dataframe with one column, ``geometry``, and ``region_code`` as index.
+        :return: a 2-dimensional dataframe with ``province_code`` as index and ``geometry`` as column.
         :rtype: pd.DataFrame
         """
-        file = gpd.read_file(
-            os.path.join(_current_abs_dir, './limits_IT_regions.geojson')
-        )
-        cols_rename = {
-            'reg_istat_code_num': 'region_code',
-            'geometry': 'geometry',
-        }
+        if not hasattr(self, '_italy_provinces_geometry'):
+            setattr(
+                self,
+                '_italy_provinces_geometry',
+                gpd.read_feather(
+                    os.path.join(_data_abs_dir, 'italy_geo_provinces.feather')
+                ).set_index('province_code'),
+            )
+        return self._italy_provinces_geometry
 
-        file = file.rename(columns=cols_rename)
-        file = file[cols_rename.values()].set_index('region_code')
-        return file
+    @property
+    def italy_regions_geometry(self) -> pd.DataFrame:
+        """Method to get geospatial data for plotting regions.
+
+        :return: a 2-dimensional dataframe with ``region_code`` as index and ``geometry`` as column.
+        :rtype: pd.DataFrame
+        """
+        if not hasattr(self, '_italy_regions_geometry'):
+            setattr(
+                self,
+                '_italy_regions_geometry',
+                gpd.read_feather(
+                    os.path.join(_data_abs_dir, 'italy_geo_regions.feather')
+                ).set_index('region_code'),
+            )
+        return self._italy_regions_geometry
+
+    @property
+    def population_df(self) -> pd.DataFrame:
+        """Method to get italian population data.
+
+        :return: a 2-dimensional dataframe with ``municipality_code`` as index and and many columns with population data in `long` format (columns: ``age``, ``F``, ``M`` and``tot``).
+        :rtype: pd.DataFrame
+        """
+
+        if not hasattr(self, '_population_df'):
+            setattr(
+                self,
+                '_population_df',
+                pd.read_feather(
+                    os.path.join(_data_abs_dir, 'italy_pop_2022.feather'),
+                ).set_index('municipality_code'),
+            )
+        return self._population_df
+
+    @cache
+    def get_italian_population_for_municipalites(
+        self,
+        population_limits: str | list = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame:
+        """Method to get italian population data for municipalities.
+
+        :param population_limits: a list of int or ``'total'`` or ``'auto'``, defaults to 'auto'.
+        :type population_limits: str | list, optional
+        :param population_labels: a list of strings that defines labels name, defaults to None.
+        :type population_labels: list[str] | None, optional
+
+        :raises: ValueError if ``population_limits`` is not a list of int or a string in ``['total', 'auto']``.
+
+        :return: a 2-dimensional dataframe with ``municipality_code`` as index and many columns according to ``population_limits`` and ``population_labels``, see above for more informations.
+        :rtype: pd.DataFrame
+        """
+
+        if isinstance(population_limits, str):
+            population_limits = population_limits.lower().strip()
+            if population_limits == 'total':
+                pop_df = self.population_df.copy()
+                ret = pop_df.groupby('municipality_code')[['F', 'M', 'tot']].sum()
+                ret['age_group'] = 'population'
+                ret = ret[['age_group', 'F', 'M', 'tot']]
+            elif population_limits == 'auto':
+                pop_df = self.population_df.copy()
+                slices = _default_age_cutoffs
+                slices_labels = generate_labels_for_age_cutoffs(slices)
+                pop_df['age_group'] = pd.cut(
+                    pop_df.age,
+                    bins=slices,
+                    labels=slices_labels,
+                    right=False,
+                )
+                ret = (
+                    pop_df.groupby(['municipality_code', 'age_group'])[
+                        ['F', 'M', 'tot']
+                    ]
+                    .sum()
+                    .reset_index()
+                    .set_index('municipality_code')
+                )
+            else:
+                raise ValueError(
+                    'population_limits must be a list of int that divides age groups or "auto" or "total" not "{}"'.format(
+                        population_limits
+                    )
+                )
+        else:
+            slices = prepare_limits(population_limits)
+            slices_labels = population_labels or generate_labels_for_age_cutoffs(slices)
+            pop_df = self.population_df.copy()
+            pop_df['age_group'] = pd.cut(
+                pop_df.age, bins=slices, labels=slices_labels, right=False
+            )
+            ret = (
+                pop_df.groupby(['municipality_code', 'age_group'])[['F', 'M', 'tot']]
+                .sum()
+                .reset_index()
+                .set_index('municipality_code')
+            )
+
+        ret = ret.pivot(columns='age_group', values=['F', 'M', 'tot'])
+        ret.columns = ret.columns.map(
+            lambda x: f'{x[1]}_{x[0]}' if x[0] != 'tot' else x[1]
+        )
+        return ret
+
+    @cache
+    def get_italian_population_for_provinces(
+        self,
+        population_limits: str | list = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame:
+        """Method to get italian population data for provinces.
+
+        :param population_limits: a list of int or ``'total'`` or ``'auto'``, defaults to 'auto'.
+        :type population_limits: str | list, optional
+        :param population_labels: a list of strings that defines labels name, defaults to None.
+        :type population_labels: list[str] | None, optional
+
+        :raises: ValueError if ``population_limits`` is not a list of int or a string in ``['total', 'auto']``.
+
+        :return: a 2-dimensional dataframe with ``province_code`` as index and many columns according to ``population_limits`` and ``population_labels``, see above for more informations.
+        :rtype: pd.DataFrame
+        """
+        pop_df = self.get_italian_population_for_municipalites(
+            population_limits, population_labels
+        )
+        geo_df = self.italy_municipalities
+        return aggregate_province_pop(pop_df, geo_df)
+
+    @cache
+    def get_italian_population_for_regions(
+        self,
+        population_limits: str | list = 'auto',
+        population_labels: list | None = None,
+    ) -> pd.DataFrame:
+        """Method to get italian population data for regions.
+
+        :param population_limits: a list of int or ``'total'`` or ``'auto'``, defaults to 'auto'.
+        :type population_limits: str | list, optional
+        :param population_labels: a list of strings that defines labels name, defaults to None.
+        :type population_labels: list[str] | None, optional
+
+        :raises: ValueError if ``population_limits`` is not a list of int or a string in ``['total', 'auto']``.
+
+        :return: a 2-dimensional dataframe with ``region_code`` as index and many columns according to ``population_limits`` and ``population_labels``, see above for more informations.
+        :rtype: pd.DataFrame
+        """
+        pop_df = self.get_italian_population_for_municipalites(
+            population_limits, population_labels
+        )
+        geo_df = self.italy_municipalities
+        return aggregate_region_pop(pop_df, geo_df)
+
+    def compose_df(
+        self,
+        level='municipality',
+        include_geometry=False,
+        population_limits: str | list = 'auto',
+        population_labels: list | None = None,
+    ):
+        """Method to get a dataframe with administrative, geospatial and population data.
+
+        :param level: the level of details of the dataframe that can be ``muncipality`` or ``province`` or ``region``, defaults to 'muncipality'.
+        :type level: str, optional
+        :param include_geometry: if True the dataframe will include geospatial data, defaults to False.
+        :type include_geometry: bool, optional
+        :param population_limits: a list of int or ``'total'`` or ``'auto'``, defaults to 'auto'.
+        :type population_limits: str | list, optional
+        :param population_labels: a list of str that defines labels name, defaults to None.
+        :type population_labels: list | None, optional
+
+        """
+        level = level.lower().strip()
+        if level == 'municipality':
+            if include_geometry:
+                geo_df = self.italy_municipalities_geometry
+            pop_df = self.get_italian_population_for_municipalites(
+                population_limits=population_limits, population_labels=population_labels
+            )
+            mun_df = self.italy_municipalities
+            if include_geometry:
+                ret = pd.merge(
+                    mun_df, geo_df, how='left', left_index=True, right_index=True
+                )
+                ret = pd.merge(
+                    ret, pop_df, how='left', left_index=True, right_index=True
+                )
+            else:
+                ret = pd.merge(
+                    mun_df, pop_df, how='left', left_index=True, right_index=True
+                )
+            return ret.reset_index()
+        elif level == 'province':
+            if include_geometry:
+                geo_df = self.italy_provinces_geometry
+            pop_df = self.get_italian_population_for_provinces(
+                population_limits=population_limits, population_labels=population_labels
+            )
+            pro_df = self.italy_provinces
+            if include_geometry:
+                ret = pd.merge(
+                    pro_df, geo_df, how='left', left_index=True, right_index=True
+                )
+                ret = pd.merge(
+                    ret, pop_df, how='left', left_index=True, right_index=True
+                )
+            else:
+                ret = pd.merge(
+                    pro_df, pop_df, how='left', left_index=True, right_index=True
+                )
+            return ret.reset_index()
+        elif level == 'region':
+            if include_geometry:
+                geo_df = self.italy_regions_geometry
+            pop_df = self.get_italian_population_for_regions(
+                population_limits=population_limits, population_labels=population_labels
+            )
+            reg_df = self.italy_regions
+            if include_geometry:
+                ret = pd.merge(
+                    reg_df, geo_df, how='left', left_index=True, right_index=True
+                )
+                ret = pd.merge(
+                    ret, pop_df, how='left', left_index=True, right_index=True
+                )
+            else:
+                ret = pd.merge(
+                    reg_df, pop_df, how='left', left_index=True, right_index=True
+                )
+            return ret.reset_index()
+        else:
+            raise ValueError(
+                f'level must be "municipality", "province" or "region" not "{level}"'
+            )

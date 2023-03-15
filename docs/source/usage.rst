@@ -24,7 +24,7 @@ Then you can use italy-geopop to get data for your `pd.Series <https://pandas.py
   :lineno-start: 3
 
   data = pd.Series(["Torino", "Agliè", "Airasca"])
-  data.italy_geopop.from_municipality()
+  data.italy_geopop.from_municipality(population_limits='total')
 
 
 .. csv-table::
@@ -40,7 +40,7 @@ You can also use italy-geopop to get data for your `pd.Series <https://pandas.py
   :lineno-start: 5
 
   data = pd.Series(["Torino", "Milano", "Venezia"])
-  data.italy_geopop.from_province()
+  data.italy_geopop.from_province(population_limits=[50], population_labels=['below_50', 'above_equal_50'])
 
 
 .. csv-table::

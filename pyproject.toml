@@ -52,8 +52,7 @@ docs-build_material = [
 [tool.hatch.build]
 pacakge-dir = ""
 include = [
-  "italy_geopop/*.csv",
-  "italy_geopop/*.geojson",
+  "italy_geopop/*/*.feather",
   "**/*.py",
 ]
 exclude = [

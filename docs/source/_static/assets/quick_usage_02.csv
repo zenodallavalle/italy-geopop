@@ -1,4 +1,4 @@
 ,province_code,province,province_short,municipalities,region,region_code,geometry,below_50_F,above_equal_50_F,below_50_M,above_equal_50_M,below_50,above_equal_50
-0,1,Torino,TO,[{'municipality_code': 10,Piemonte,1,POLYGON ,550793.0,586366.0,572143.0,499068.0,1122936.0,1085434.0
-1,15,Milano,MI,[{'municipality_code': 15,Lombardia,3,MULTIPOLYGON ,857481.0,792711.0,898004.0,666434.0,1755485.0,1459145.0
-2,27,Venezia,VE,[{'municipality_code': 27,Veneto,5,POLYGON ,205100.0,224401.0,214116.0,193299.0,419216.0,417700.0
+0,1,Torino,TO,[{'cadastral_code': 'A074,Piemonte,1,POLYGON ,550793.0,586366.0,572143.0,499068.0,1122936.0,1085434.0
+1,15,Milano,MI,[{'cadastral_code': 'A010,Lombardia,3,MULTIPOLYGON ,857481.0,792711.0,898004.0,666434.0,1755485.0,1459145.0
+2,27,Venezia,VE,[{'cadastral_code': 'A302,Veneto,5,POLYGON ,205100.0,224401.0,214116.0,193299.0,419216.0,417700.0

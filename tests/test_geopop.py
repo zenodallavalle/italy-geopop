@@ -7,6 +7,7 @@ from italy_geopop.geopop import Geopop
 
 _municipality_columns = [
     'municipality',
+    'cadastral_code',
     'province',
     'province_code',
     'province_short',

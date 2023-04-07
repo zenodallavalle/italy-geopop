@@ -64,7 +64,9 @@ class ItalyGeopop:
         str_indexed = temp_df.set_index('_index')
         temp_df['_index'] = temp_df.municipality_code
         code_indexed = temp_df.set_index('_index')
-        return str_indexed, code_indexed
+        temp_df['_index'] = temp_df.cadastral_code.str.lower()
+        cadastral_indexed = temp_df.set_index('_index')
+        return str_indexed, code_indexed, cadastral_indexed
 
     def from_municipality(
         self,
@@ -74,7 +76,7 @@ class ItalyGeopop:
         population_labels: list | None = None,
     ) -> pd.DataFrame:
         """Get data for municipalities.
-        Input series can contain municipalities names or municipalities istat codes; *data types can also be mixed*.
+        Input series can contain municipalities names, municipalities istat codes or municipalities cadastral code (also known as Belfiore's code); *data types can also be mixed*.
         If input data is not found in italian data, a row of NaNs is returned, *this behaviour may change in the future.*
 
         :param return_cols: used to subset the returned data in order to provide the requested fields. If None, all available fields are returned. If is an instance of re.Pattern or is a string and regex param is True columns will be filtered and returned only if their names match the regular expression. The available fields are listed above, defaults to None.
@@ -91,7 +93,7 @@ class ItalyGeopop:
         :return: Requested data in a 2-dimensional dataframe that has the same index of input data.
         :rtype: pandas.DataFrame
         """
-        str_indexed, code_indexed = self._generate_municipality_dfs(
+        str_indexed, code_indexed, cadastral_indexed = self._generate_municipality_dfs(
             population_limits=population_limits,
             population_labels=population_labels,
             include_geometry=self.include_geometry,
@@ -99,15 +101,20 @@ class ItalyGeopop:
         empty_serie = self._generate_empty_serie(str_indexed.columns.to_list())
         str_indexed = dict(str_indexed.iterrows())
         code_indexed = dict(code_indexed.iterrows())
+        cadastral_indexed = dict(cadastral_indexed.iterrows())
 
         @cache
         def get_data(x) -> pd.Series:
             x = str(x).strip().lower()
             try:
                 x = int(float(x))
+                print('x is int', x)
                 return code_indexed.get(x, empty_serie)
             except Exception:
-                return str_indexed.get(x, empty_serie)
+                if re.fullmatch('[a-z][0-9]{3}', x):
+                    return cadastral_indexed.get(x, empty_serie)
+                else:
+                    return str_indexed.get(x, empty_serie)
 
         return handle_return_cols(self._obj.apply(get_data), return_cols, regex)
 

@@ -12,6 +12,7 @@ from italy_geopop.pandas_extension import pandas_activate_context
 _municipality_columns = [
     'municipality',
     'municipality_code',
+    'cadastral_code',
 ]
 
 _province_columns = [
@@ -93,6 +94,21 @@ def municipality(request) -> pd.Series:
     elif request.param == 'codes':
         return pd.Series(
             [70070, 88007, 60018, 4001, 16131, 17097, 4071, 29026, 26084, 6015]
+        )
+    elif request.param == 'cadastral':
+        return pd.Series(
+            [
+                'B368',
+                'H838',
+                'M212',
+                'M194',
+                'H265',
+                'H432',
+                'C236',
+                'C879',
+                'B160',
+                'B551',
+            ]
         )
     else:
         return pd.Series(
@@ -368,15 +384,9 @@ def test_pandas_extension_from_municipality_returns_right_columns(
         )
     df_columns = list(output.columns)
     for c in (
-        [
-            'municipality',
-            'municipality_code',
-            'province',
-            'province_code',
-            'province_short',
-            'region',
-            'region_code',
-        ]
+        _municipality_columns
+        + _province_columns
+        + _region_columns
         + pop_cols
         + (['geometry'] if include_geometry else [])
     ):
@@ -384,6 +394,43 @@ def test_pandas_extension_from_municipality_returns_right_columns(
         if c in df_columns:
             df_columns.remove(c)
     assert len(df_columns) == 0
+
+
+@pytest.mark.parametrize('include_geometry', [True, False])
+@pytest.mark.parametrize(
+    'population_limits,population_labels',
+    [
+        ('auto', None),
+        ('total', None),
+        ([50.0, 75], None),
+        ([50], ['below_50', 'above_50']),
+    ],
+)
+def test_pandas_extension_from_municipality_finds_results(
+    municipality, include_geometry, population_limits, population_labels
+):
+    if population_limits == 'auto':
+        pop_cols = _auto_population_limits_columns
+    elif population_limits == 'total':
+        pop_cols = _total_population_columns
+    else:
+        pop_cols = []
+        if population_labels is None:
+            _pop_limits = prepare_limits(population_limits)
+            for c in generate_labels_for_age_cutoffs(_pop_limits):
+                pop_cols.append(c)
+                pop_cols.append(f'{c}_M')
+                pop_cols.append(f'{c}_F')
+        else:
+            for c in population_labels:
+                pop_cols.append(c)
+                pop_cols.append(f'{c}_M')
+                pop_cols.append(f'{c}_F')
+    with pandas_activate_context(include_geometry=include_geometry):
+        output = municipality.italy_geopop.from_municipality(
+            population_limits=population_limits, population_labels=population_labels
+        )
+    assert not len(output[output.municipality_code.isna()])
 
 
 @pytest.mark.parametrize('include_geometry', [True, False])
@@ -422,14 +469,9 @@ def test_pandas_extension_from_province_returns_right_columns(
         )
     df_columns = list(output.columns)
     for c in (
-        [
-            'province_code',
-            'province',
-            'province_short',
-            'municipalities',
-            'region',
-            'region_code',
-        ]
+        ['municipalities']
+        + _province_columns
+        + _region_columns
         + pop_cols
         + (['geometry'] if include_geometry else [])
     ):
@@ -437,6 +479,43 @@ def test_pandas_extension_from_province_returns_right_columns(
         if c in df_columns:
             df_columns.remove(c)
     assert len(df_columns) == 0
+
+
+@pytest.mark.parametrize('include_geometry', [True, False])
+@pytest.mark.parametrize(
+    'population_limits,population_labels',
+    [
+        ('auto', None),
+        ('total', None),
+        ([50.0, 75], None),
+        ([50], ['below_50', 'above_50']),
+    ],
+)
+def test_pandas_extension_from_province_finds_results(
+    province, include_geometry, population_limits, population_labels
+):
+    if population_limits == 'auto':
+        pop_cols = _auto_population_limits_columns
+    elif population_limits == 'total':
+        pop_cols = _total_population_columns
+    else:
+        pop_cols = []
+        if population_labels is None:
+            _pop_limits = prepare_limits(population_limits)
+            for c in generate_labels_for_age_cutoffs(_pop_limits):
+                pop_cols.append(c)
+                pop_cols.append(f'{c}_M')
+                pop_cols.append(f'{c}_F')
+        else:
+            for c in population_labels:
+                pop_cols.append(c)
+                pop_cols.append(f'{c}_M')
+                pop_cols.append(f'{c}_F')
+    with pandas_activate_context(include_geometry=include_geometry):
+        output = province.italy_geopop.from_province(
+            population_limits=population_limits, population_labels=population_labels
+        )
+    assert not len(output[output.province_code.isna()])
 
 
 @pytest.mark.parametrize('include_geometry', [True, False])
@@ -475,11 +554,8 @@ def test_pandas_extension_from_region_returns_right_columns(
         )
     df_columns = list(output.columns)
     for c in (
-        [
-            'provinces',
-            'region',
-            'region_code',
-        ]
+        ['provinces']
+        + _region_columns
         + pop_cols
         + (['geometry'] if include_geometry else [])
     ):
@@ -487,6 +563,43 @@ def test_pandas_extension_from_region_returns_right_columns(
         if c in df_columns:
             df_columns.remove(c)
     assert len(df_columns) == 0
+
+
+@pytest.mark.parametrize('include_geometry', [True, False])
+@pytest.mark.parametrize(
+    'population_limits,population_labels',
+    [
+        ('auto', None),
+        ('total', None),
+        ([50.0, 75], None),
+        ([50], ['below_50', 'above_50']),
+    ],
+)
+def test_pandas_extension_from_region_finds_results(
+    region, include_geometry, population_limits, population_labels
+):
+    if population_limits == 'auto':
+        pop_cols = _auto_population_limits_columns
+    elif population_limits == 'total':
+        pop_cols = _total_population_columns
+    else:
+        pop_cols = []
+        if population_labels is None:
+            _pop_limits = prepare_limits(population_limits)
+            for c in generate_labels_for_age_cutoffs(_pop_limits):
+                pop_cols.append(c)
+                pop_cols.append(f'{c}_M')
+                pop_cols.append(f'{c}_F')
+        else:
+            for c in population_labels:
+                pop_cols.append(c)
+                pop_cols.append(f'{c}_M')
+                pop_cols.append(f'{c}_F')
+    with pandas_activate_context(include_geometry=include_geometry):
+        output = region.italy_geopop.from_region(
+            population_limits=population_limits, population_labels=population_labels
+        )
+    assert not len(output[output.region_code.isna()])
 
 
 # Test smart features
@@ -516,8 +629,12 @@ def test_pandas_extension_find_correct_province_information_from_complex_provinc
     province_name_complex, province_name_complex_to_simple, include_geometry
 ):
     with pandas_activate_context(include_geometry=include_geometry):
-        expected = province_name_complex_to_simple.italy_geopop.from_province()
-        output = province_name_complex.italy_geopop.smart_from_province()
+        expected = province_name_complex_to_simple.italy_geopop.from_province().drop(
+            ['municipalities'], axis=1
+        )
+        output = province_name_complex.italy_geopop.smart_from_province().drop(
+            ['municipalities'], axis=1
+        )
     assert (output != expected).sum().sum() == 0
 
 
@@ -537,8 +654,12 @@ def test_pandas_extension_find_correct_region_information_from_complex_region_na
     region_name_complex, region_name_complex_to_simple, include_geometry
 ):
     with pandas_activate_context(include_geometry=include_geometry):
-        expected = region_name_complex_to_simple.italy_geopop.from_region()
-        output = region_name_complex.italy_geopop.smart_from_region()
+        expected = region_name_complex_to_simple.italy_geopop.from_region().drop(
+            ['provinces'], axis=1
+        )
+        output = region_name_complex.italy_geopop.smart_from_region().drop(
+            ['provinces'], axis=1
+        )
     assert (output != expected).sum().sum() == 0
 
 

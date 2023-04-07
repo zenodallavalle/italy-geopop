@@ -59,6 +59,7 @@ Municipality data
 
 - ``municipality: str`` - municipality name, capitalized, available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_municipality`.
 - ``municipality_code: int`` - municipality istat code, available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_municipality`.
+- ``cadastral_code: str`` - municipality cadastral code (cadastral code), available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_municipality`.
 - ``municipalities: list`` - a list of dictionaries with the following structure ``{'municipality_code': <municipality code:int>, 'municipality': <municipality name:str}``, available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_province`.
 
 .. _province-data:

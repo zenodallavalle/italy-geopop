@@ -300,7 +300,18 @@ def region_name_complex() -> pd.Series:
     """
     Returns a pd.Series with a valid complex region name.
     """
-    return pd.Series(['Regione del Veneto'])
+    return pd.Series(
+        [
+            'Regione del Veneto',
+            "Valle d'Aosta",
+            'Valle d Aosta',
+            'Valle di Aosta',
+            'Valle Aosta',
+            'Trentino-Alto Adige',
+            'Friuli Venezia Giulia',
+            'Friuli-Venezia-Giulia',
+        ]
+    )
 
 
 @pytest.fixture
@@ -308,7 +319,7 @@ def region_name_complex_to_simple() -> pd.Series:
     """
     Returns a pd.Series with a the right simple name for region_name_complex above.
     """
-    return pd.Series(['veneto'])
+    return pd.Series(['veneto', 2, 2, 2, 2, 4, 6, 6])
 
 
 @pytest.fixture
@@ -316,7 +327,9 @@ def not_unequivocal_region_name_complex() -> pd.Series:
     """
     Returns a pd.Series with a non-unequivocal complex region name.
     """
-    return pd.Series(['Piemonte o Lombardia'])
+    return pd.Series(
+        ['Piemonte o Lombardia', 'Trentino Venezia Giulia', 'Valle Alto Adige']
+    )
 
 
 # Ensure same index as input series index
@@ -654,11 +667,11 @@ def test_pandas_extension_find_correct_region_information_from_complex_region_na
     region_name_complex, region_name_complex_to_simple, include_geometry
 ):
     with pandas_activate_context(include_geometry=include_geometry):
-        expected = region_name_complex_to_simple.italy_geopop.from_region().drop(
-            ['provinces'], axis=1
+        expected = region_name_complex_to_simple.italy_geopop.from_region(
+            return_cols=['region']
         )
-        output = region_name_complex.italy_geopop.smart_from_region().drop(
-            ['provinces'], axis=1
+        output = region_name_complex.italy_geopop.smart_from_region(
+            return_cols=['region']
         )
     assert (output != expected).sum().sum() == 0
 

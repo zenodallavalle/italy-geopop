@@ -3,11 +3,10 @@ from functools import cache
 import re
 import numpy as np
 import pandas as pd
-from warnings import warn
 
 from typing import Any
 
-from ._utils import handle_return_cols, simple_cache, match_single_word
+from ._utils import handle_return_cols, match_single_key
 from . import geopop
 
 
@@ -299,7 +298,7 @@ class ItalyGeopop:
 
         @cache
         def get_data(x):
-            key = match_single_word(str_indexed.keys(), str(x).strip().lower())
+            key = match_single_key(str_indexed.keys(), str(x).strip().lower())
             return str_indexed.get(key, empty_serie)
 
         ret = ret.fillna(nans.apply(get_data))
@@ -345,7 +344,7 @@ class ItalyGeopop:
 
         @cache
         def get_data(x):
-            key = match_single_word(str_indexed.keys(), str(x).strip().lower())
+            key = match_single_key(str_indexed.keys(), str(x).strip().lower())
             return str_indexed.get(key, empty_serie)
 
         ret = ret.fillna(nans.apply(get_data))
@@ -391,7 +390,7 @@ class ItalyGeopop:
 
         @cache
         def get_data(x):
-            key = match_single_word(str_indexed.keys(), str(x).strip().lower())
+            key = match_single_key(str_indexed.keys(), str(x).strip().lower())
             return str_indexed.get(key, empty_serie)
 
         ret = ret.fillna(nans.apply(get_data))

@@ -2,7 +2,7 @@ from functools import wraps
 from itertools import pairwise
 import pandas as pd
 import numpy as np
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Optional
 from warnings import warn
 import re
 
@@ -57,24 +57,89 @@ def cache(fn: Callable) -> Callable:
     return wrapper
 
 
-def match_single_word(words: Iterable[str], text: str) -> str | None:
-    """return the word, taken from a list of words, that is found in text only if it's the only match. Word is searched as "exact word match".
+def _match_every_word(words: Iterable[str], text: str) -> bool:
+    """return True if every word in words is found in text, False otherwise. Word is searched as "exact word match" and with "case-insensitive" flag.
 
     :param words: a list or iterable of words to be searched into text.
     :type words: Iterable[str]
     :param text: the source text into words are searched.
     :type text: str
-    :return: the word, taken from a list of words, that is found in text only if it's the only match.
+    :return: True if every word in words is found in text, False otherwise.
+    :rtype: bool
+    """
+    for word in words:
+        if not re.search(r'\b{}\b'.format(word), text, flags=re.IGNORECASE):
+            return False
+    return True
+
+
+def match_single_key(
+    keys: Iterable[str],
+    text: str,
+    _split_key: bool = False,
+    _return_values: Optional[Iterable[str]] = None,
+) -> str | None:
+    """return the key, taken from a list of keys, that is found in text only if it's the only match.
+    Key is searched as "exact key match" and with "case-insensitive" flag.
+
+    If no matches are found every key is splitted into:
+    - sinonims using '/' as separator and then search for every sinonim in text if '/' is found in key.
+    - words using '\W' regex as separator and then search for every word whose length is > 2 in text. If every word is found, the original key is returned.
+
+    :param keys: a list or iterable of keys to be searched into text.
+    :type keys: Iterable[str]
+    :param text: the source text into keys are searched.
+    :type text: str
+
+    :return: the key, taken from a list of keys, that is found in text only if it's the only match.
     :rtype: str | None
     """
+    if _return_values is None:
+        return_values = keys
+    else:
+        return_values = _return_values
+    return_dict = dict(zip(keys, return_values))
     n_matches = 0
     match = None
-    for word in words:
-        if re.search(r'\b{}\b'.format(word), text):
-            n_matches += 1
-            match = word
+    extended_keys = []
+    extended_values = []
+    if not _split_key:
+        for key in keys:
+            if re.search(r'\b{}\b'.format(key), text, flags=re.IGNORECASE):
+                n_matches += 1
+                match = key
+        if not n_matches:
+            for key in keys:
+                if '/' not in key:
+                    continue
+                for sinonim in key.split('/'):
+                    sinonim = sinonim.strip()
+                    if len(sinonim) < 3:
+                        continue
+                    extended_keys.append(sinonim)
+                    extended_values.append(key)
+                    if re.search(r'\b{}\b'.format(key), text, flags=re.IGNORECASE):
+                        n_matches += 1
+                        match = key
+
+    else:
+        for key in keys:
+            words = [x.strip() for x in re.split('\W', key) if len(x.strip()) >= 2]
+            if len(words) < 2:
+                continue
+            if _match_every_word(words, text):
+                n_matches += 1
+                match = key
+
     if n_matches == 1:
-        return match
+        return return_dict[match]
+    elif not n_matches and not _split_key:
+        return match_single_key(
+            ([*keys] + extended_keys),
+            text,
+            _split_key=True,
+            _return_values=([*return_values] + extended_values),
+        )
 
 
 def aggregate_province_pop(pop_df: pd.DataFrame, geo_df: pd.DataFrame) -> pd.DataFrame:

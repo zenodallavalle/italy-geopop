@@ -107,7 +107,6 @@ class ItalyGeopop:
             x = str(x).strip().lower()
             try:
                 x = int(float(x))
-                print('x is int', x)
                 return code_indexed.get(x, empty_serie)
             except Exception:
                 if re.fullmatch('[a-z][0-9]{3}', x):

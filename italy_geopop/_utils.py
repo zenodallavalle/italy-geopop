@@ -118,7 +118,7 @@ def match_single_key(
                         continue
                     extended_keys.append(sinonim)
                     extended_values.append(key)
-                    if re.search(r'\b{}\b'.format(key), text, flags=re.IGNORECASE):
+                    if re.search(r'\b{}\b'.format(sinonim), text, flags=re.IGNORECASE):
                         n_matches += 1
                         match = key
 

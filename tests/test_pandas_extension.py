@@ -227,7 +227,7 @@ def province_name_complex() -> pd.Series:
     """
     Returns a pd.Series with a valid complex province name.
     """
-    return pd.Series(['Università degli studi di Verona'])
+    return pd.Series(['Università degli studi di Verona', 'Città di Bolzano'])
 
 
 @pytest.fixture
@@ -235,7 +235,7 @@ def province_name_complex_to_simple() -> pd.Series:
     """
     Returns a pd.Series with a the right simple name for province_name_complex above.
     """
-    return pd.Series(['verona'])
+    return pd.Series(['verona', 'bolzano/bozen'])
 
 
 @pytest.fixture

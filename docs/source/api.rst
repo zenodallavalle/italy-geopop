@@ -68,6 +68,7 @@ Province data
 ******************
 
 - ``province: str`` - province name, capitalized, available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_province`.
+- ``province_short`` -province abbreviation, uppercase, available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_province`.
 - ``province_code: int`` - province istat code, available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_province`.
 - ``provinces: list`` - a list of dictionaries with the following structure ``{'province_code': <province code:int>, 'province': <province name:str, 'municipalities':list[{'municipality_code': <municipality code:int>, 'municipality': <municipality name:str}]}``, available only if data is retrieved using :py:meth:`italy_goepop.pandas_extension.ItalyGeopop.from_region`.
 

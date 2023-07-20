@@ -1,10 +1,28 @@
 from functools import wraps
 from itertools import pairwise
+import os
 import pandas as pd
 import numpy as np
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional, List
 from warnings import warn
 import re
+
+
+def get_available_years(data_directory: os.PathLike | str) -> List[int]:
+    """Return a list of data available years."""
+    years = []
+    for file in os.listdir(data_directory):
+        if re.match(r"\d{4}_", file):
+            try:
+                years.append(int(file[:4]))
+            except ValueError:
+                pass
+    return sorted(years)
+
+
+def get_latest_available_year(data_directory: os.PathLike | str) -> int:
+    """Return the latest data available year."""
+    return max(get_available_years(data_directory))
 
 
 def handle_return_cols(
@@ -31,11 +49,11 @@ def handle_return_cols(
 def simple_cache(fn: Callable) -> Callable:
     @wraps(fn)
     def wrapper(*args, **kwargs) -> Any:
-        if '_cached' in wrapper.cache:
-            return wrapper.cache['_cached']
+        if "_cached" in wrapper.cache:
+            return wrapper.cache["_cached"]
         else:
             value = fn(*args, **kwargs)
-            wrapper.cache['_cached'] = value
+            wrapper.cache["_cached"] = value
             return value
 
     wrapper.cache = dict()
@@ -68,7 +86,7 @@ def _match_every_word(words: Iterable[str], text: str) -> bool:
     :rtype: bool
     """
     for word in words:
-        if not re.search(r'\b{}\b'.format(word), text, flags=re.IGNORECASE):
+        if not re.search(r"\b{}\b".format(word), text, flags=re.IGNORECASE):
             return False
     return True
 
@@ -105,26 +123,26 @@ def match_single_key(
     extended_values = []
     if not _split_key:
         for key in keys:
-            if re.search(r'\b{}\b'.format(key), text, flags=re.IGNORECASE):
+            if re.search(r"\b{}\b".format(key), text, flags=re.IGNORECASE):
                 n_matches += 1
                 match = key
         if not n_matches:
             for key in keys:
-                if '/' not in key:
+                if "/" not in key:
                     continue
-                for sinonim in key.split('/'):
+                for sinonim in key.split("/"):
                     sinonim = sinonim.strip()
                     if len(sinonim) < 3:
                         continue
                     extended_keys.append(sinonim)
                     extended_values.append(key)
-                    if re.search(r'\b{}\b'.format(sinonim), text, flags=re.IGNORECASE):
+                    if re.search(r"\b{}\b".format(sinonim), text, flags=re.IGNORECASE):
                         n_matches += 1
                         match = key
 
     else:
         for key in keys:
-            words = [x.strip() for x in re.split('\W', key) if len(x.strip()) >= 2]
+            words = [x.strip() for x in re.split("\W", key) if len(x.strip()) >= 2]
             if len(words) < 2:
                 continue
             if _match_every_word(words, text):
@@ -144,16 +162,16 @@ def match_single_key(
 
 def aggregate_province_pop(pop_df: pd.DataFrame, geo_df: pd.DataFrame) -> pd.DataFrame:
     df = pd.merge(
-        geo_df[['province_code']], pop_df, how='left', left_index=True, right_index=True
+        geo_df[["province_code"]], pop_df, how="left", left_index=True, right_index=True
     )
-    return df.groupby('province_code').sum()
+    return df.groupby("province_code").sum()
 
 
 def aggregate_region_pop(pop_df: pd.DataFrame, geo_df: pd.DataFrame) -> pd.DataFrame:
     df = pd.merge(
-        geo_df[['region_code']], pop_df, how='left', left_index=True, right_index=True
+        geo_df[["region_code"]], pop_df, how="left", left_index=True, right_index=True
     )
-    return df.groupby('region_code').sum()
+    return df.groupby("region_code").sum()
 
 
 def prepare_limits(population_limits):
@@ -161,9 +179,9 @@ def prepare_limits(population_limits):
     slices = [0]
     for limit in sorted(set(map(int, population_limits))):
         if limit > 100:
-            warn(f'age above 100 are not supported, {limit} will be ignored')
+            warn(f"age above 100 are not supported, {limit} will be ignored")
         elif limit <= 0:
-            warn(f'age ≤ 0 are not supported, {limit} will be ignored')
+            warn(f"age ≤ 0 are not supported, {limit} will be ignored")
         else:
             slices.append(limit)
     slices.append(np.inf)
@@ -173,10 +191,10 @@ def prepare_limits(population_limits):
 def generate_labels_for_age_cutoffs(age_cutoffs):
     groups = list(pairwise(age_cutoffs))
     return [
-        '<{}'.format(upper)
+        "<{}".format(upper)
         if i == 0
-        else '>={}'.format(lower)
+        else ">={}".format(lower)
         if (i + 1) == len(groups)
-        else '{}-{}'.format(lower, upper)
+        else "{}-{}".format(lower, upper)
         for i, [lower, upper] in enumerate(groups)
     ]

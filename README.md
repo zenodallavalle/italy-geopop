@@ -48,7 +48,7 @@ ISTAT codes can be found [here](https://it.wikipedia.org/wiki/Codice_ISTAT) or [
 
 ```
 >>> from italy_geopop.pandas_extension import pandas_activate
->>> pandas_activate(include_geometry=False)
+>>> pandas_activate(include_geometry=False, data_year=2022)
 ```
 
 ```

@@ -1,10 +1,14 @@
 import geopandas as gpd
+from matplotlib.style import available
 import numpy as np
 import pandas as pd
 import os
+from typing import Optional
 from warnings import warn
 
 from ._utils import (
+    get_available_years,
+    get_latest_available_year,
     cache,
     generate_labels_for_age_cutoffs,
     aggregate_province_pop,
@@ -13,13 +17,32 @@ from ._utils import (
 )
 
 _current_abs_dir = os.path.dirname(os.path.realpath(__file__))
-_data_abs_dir = os.path.join(_current_abs_dir, 'data')
+_data_abs_dir = os.path.join(_current_abs_dir, "data")
 
 _default_age_cutoffs = [0, 3, 11, 19, 25, 50, 65, 75, 120]
 
 
 class Geopop:
-    """A class that contains italian geospatial and population data."""
+    """A class that contains italian geospatial and population data.
+
+    :param data_year: the year of the data you need; if None the latests is automatically picked, defaults to None
+    :type data_year: int, optional
+
+    :raises ValueError: if ``data_year`` is not available
+    """
+
+    def __init__(self, data_year: Optional[int] = None):
+        available_years = get_available_years(_data_abs_dir)
+        if data_year is None:
+            data_year = get_latest_available_year(_data_abs_dir)
+            warn(f"No data_year specified, using latest available ({data_year}).")
+        elif data_year not in available_years:
+            raise ValueError(
+                "data_year must be one of the available years ({}).".format(
+                    ", ".join(map(str, available_years))
+                )
+            )
+        self.data_year = data_year
 
     @property
     def italy_municipalities(self) -> pd.DataFrame:
@@ -29,13 +52,16 @@ class Geopop:
         :rtype: pd.DataFrame
         """
 
-        if not hasattr(self, '_italy_municipalities'):
+        if not hasattr(self, "_italy_municipalities"):
             setattr(
                 self,
-                '_italy_municipalities',
+                "_italy_municipalities",
                 pd.read_feather(
-                    os.path.join(_data_abs_dir, 'italy_municipalities_2022.feather'),
-                ).set_index('municipality_code'),
+                    os.path.join(
+                        _data_abs_dir,
+                        f"{self.data_year}_italy_municipalities.feather",
+                    ),
+                ).set_index("municipality_code"),
             )
         return self._italy_municipalities
 
@@ -49,13 +75,15 @@ class Geopop:
         :return: a 2-dimensional dataframe with ``province_code`` as index and ``province``, ``province_short``, ``municipalities``, ``region``, ``region_code`` as columns.
         :rtype: pd.DataFrame
         """
-        if not hasattr(self, '_italy_provinces'):
+        if not hasattr(self, "_italy_provinces"):
             setattr(
                 self,
-                '_italy_provinces',
+                "_italy_provinces",
                 pd.read_feather(
-                    os.path.join(_data_abs_dir, 'italy_provinces_2022.feather'),
-                ).set_index('province_code'),
+                    os.path.join(
+                        _data_abs_dir, f"{self.data_year}_italy_provinces.feather"
+                    ),
+                ).set_index("province_code"),
             )
         return self._italy_provinces
 
@@ -70,13 +98,15 @@ class Geopop:
         :rtype: pd.DataFrame
         """
 
-        if not hasattr(self, '_italy_regions'):
+        if not hasattr(self, "_italy_regions"):
             setattr(
                 self,
-                '_italy_regions',
+                "_italy_regions",
                 pd.read_feather(
-                    os.path.join(_data_abs_dir, 'italy_regions_2022.feather'),
-                ).set_index('region_code'),
+                    os.path.join(
+                        _data_abs_dir, f"{self.data_year}_italy_regions.feather"
+                    ),
+                ).set_index("region_code"),
             )
         return self._italy_regions
 
@@ -87,13 +117,16 @@ class Geopop:
         :return: a 2-dimensional dataframe with ``municipality_code`` as index and ``geometry`` as column.
         :rtype: pd.DataFrame
         """
-        if not hasattr(self, '_italy_municipalities_geometry'):
+        if not hasattr(self, "_italy_municipalities_geometry"):
             setattr(
                 self,
-                '_italy_municipalities_geometry',
+                "_italy_municipalities_geometry",
                 gpd.read_feather(
-                    os.path.join(_data_abs_dir, 'italy_geo_municipalities.feather')
-                ).set_index('municipality_code'),
+                    os.path.join(
+                        _data_abs_dir,
+                        f"{self.data_year}_italy_geo_municipalities.feather",
+                    )
+                ).set_index("municipality_code"),
             )
         return self._italy_municipalities_geometry
 
@@ -104,13 +137,15 @@ class Geopop:
         :return: a 2-dimensional dataframe with ``province_code`` as index and ``geometry`` as column.
         :rtype: pd.DataFrame
         """
-        if not hasattr(self, '_italy_provinces_geometry'):
+        if not hasattr(self, "_italy_provinces_geometry"):
             setattr(
                 self,
-                '_italy_provinces_geometry',
+                "_italy_provinces_geometry",
                 gpd.read_feather(
-                    os.path.join(_data_abs_dir, 'italy_geo_provinces.feather')
-                ).set_index('province_code'),
+                    os.path.join(
+                        _data_abs_dir, f"{self.data_year}_italy_geo_provinces.feather"
+                    )
+                ).set_index("province_code"),
             )
         return self._italy_provinces_geometry
 
@@ -121,13 +156,15 @@ class Geopop:
         :return: a 2-dimensional dataframe with ``region_code`` as index and ``geometry`` as column.
         :rtype: pd.DataFrame
         """
-        if not hasattr(self, '_italy_regions_geometry'):
+        if not hasattr(self, "_italy_regions_geometry"):
             setattr(
                 self,
-                '_italy_regions_geometry',
+                "_italy_regions_geometry",
                 gpd.read_feather(
-                    os.path.join(_data_abs_dir, 'italy_geo_regions.feather')
-                ).set_index('region_code'),
+                    os.path.join(
+                        _data_abs_dir, f"{self.data_year}_italy_geo_regions.feather"
+                    )
+                ).set_index("region_code"),
             )
         return self._italy_regions_geometry
 
@@ -139,20 +176,20 @@ class Geopop:
         :rtype: pd.DataFrame
         """
 
-        if not hasattr(self, '_population_df'):
+        if not hasattr(self, "_population_df"):
             setattr(
                 self,
-                '_population_df',
+                "_population_df",
                 pd.read_feather(
-                    os.path.join(_data_abs_dir, 'italy_pop_2022.feather'),
-                ).set_index('municipality_code'),
+                    os.path.join(_data_abs_dir, f"{self.data_year}_italy_pop.feather"),
+                ).set_index("municipality_code"),
             )
         return self._population_df
 
     @cache
     def get_italian_population_for_municipalites(
         self,
-        population_limits: str | list = 'auto',
+        population_limits: str | list = "auto",
         population_labels: list | None = None,
     ) -> pd.DataFrame:
         """Method to get italian population data for municipalities.
@@ -170,28 +207,28 @@ class Geopop:
 
         if isinstance(population_limits, str):
             population_limits = population_limits.lower().strip()
-            if population_limits == 'total':
+            if population_limits == "total":
                 pop_df = self.population_df.copy()
-                ret = pop_df.groupby('municipality_code')[['F', 'M', 'tot']].sum()
-                ret['age_group'] = 'population'
-                ret = ret[['age_group', 'F', 'M', 'tot']]
-            elif population_limits == 'auto':
+                ret = pop_df.groupby("municipality_code")[["F", "M", "tot"]].sum()
+                ret["age_group"] = "population"
+                ret = ret[["age_group", "F", "M", "tot"]]
+            elif population_limits == "auto":
                 pop_df = self.population_df.copy()
                 slices = _default_age_cutoffs
                 slices_labels = generate_labels_for_age_cutoffs(slices)
-                pop_df['age_group'] = pd.cut(
+                pop_df["age_group"] = pd.cut(
                     pop_df.age,
                     bins=slices,
                     labels=slices_labels,
                     right=False,
                 )
                 ret = (
-                    pop_df.groupby(['municipality_code', 'age_group'])[
-                        ['F', 'M', 'tot']
+                    pop_df.groupby(["municipality_code", "age_group"])[
+                        ["F", "M", "tot"]
                     ]
                     .sum()
                     .reset_index()
-                    .set_index('municipality_code')
+                    .set_index("municipality_code")
                 )
             else:
                 raise ValueError(
@@ -203,26 +240,26 @@ class Geopop:
             slices = prepare_limits(population_limits)
             slices_labels = population_labels or generate_labels_for_age_cutoffs(slices)
             pop_df = self.population_df.copy()
-            pop_df['age_group'] = pd.cut(
+            pop_df["age_group"] = pd.cut(
                 pop_df.age, bins=slices, labels=slices_labels, right=False
             )
             ret = (
-                pop_df.groupby(['municipality_code', 'age_group'])[['F', 'M', 'tot']]
+                pop_df.groupby(["municipality_code", "age_group"])[["F", "M", "tot"]]
                 .sum()
                 .reset_index()
-                .set_index('municipality_code')
+                .set_index("municipality_code")
             )
 
-        ret = ret.pivot(columns='age_group', values=['F', 'M', 'tot'])
+        ret = ret.pivot(columns="age_group", values=["F", "M", "tot"])
         ret.columns = ret.columns.map(
-            lambda x: f'{x[1]}_{x[0]}' if x[0] != 'tot' else x[1]
+            lambda x: f"{x[1]}_{x[0]}" if x[0] != "tot" else x[1]
         )
         return ret
 
     @cache
     def get_italian_population_for_provinces(
         self,
-        population_limits: str | list = 'auto',
+        population_limits: str | list = "auto",
         population_labels: list | None = None,
     ) -> pd.DataFrame:
         """Method to get italian population data for provinces.
@@ -246,7 +283,7 @@ class Geopop:
     @cache
     def get_italian_population_for_regions(
         self,
-        population_limits: str | list = 'auto',
+        population_limits: str | list = "auto",
         population_labels: list | None = None,
     ) -> pd.DataFrame:
         """Method to get italian population data for regions.
@@ -269,9 +306,9 @@ class Geopop:
 
     def compose_df(
         self,
-        level='municipality',
+        level="municipality",
         include_geometry=False,
-        population_limits: str | list = 'auto',
+        population_limits: str | list = "auto",
         population_labels: list | None = None,
     ):
         """Method to get a dataframe with administrative, geospatial and population data.
@@ -287,7 +324,7 @@ class Geopop:
 
         """
         level = level.lower().strip()
-        if level == 'municipality':
+        if level == "municipality":
             if include_geometry:
                 geo_df = self.italy_municipalities_geometry
             pop_df = self.get_italian_population_for_municipalites(
@@ -296,17 +333,17 @@ class Geopop:
             mun_df = self.italy_municipalities
             if include_geometry:
                 ret = pd.merge(
-                    mun_df, geo_df, how='left', left_index=True, right_index=True
+                    mun_df, geo_df, how="left", left_index=True, right_index=True
                 )
                 ret = pd.merge(
-                    ret, pop_df, how='left', left_index=True, right_index=True
+                    ret, pop_df, how="left", left_index=True, right_index=True
                 )
             else:
                 ret = pd.merge(
-                    mun_df, pop_df, how='left', left_index=True, right_index=True
+                    mun_df, pop_df, how="left", left_index=True, right_index=True
                 )
             return ret.reset_index()
-        elif level == 'province':
+        elif level == "province":
             if include_geometry:
                 geo_df = self.italy_provinces_geometry
             pop_df = self.get_italian_population_for_provinces(
@@ -315,17 +352,17 @@ class Geopop:
             pro_df = self.italy_provinces
             if include_geometry:
                 ret = pd.merge(
-                    pro_df, geo_df, how='left', left_index=True, right_index=True
+                    pro_df, geo_df, how="left", left_index=True, right_index=True
                 )
                 ret = pd.merge(
-                    ret, pop_df, how='left', left_index=True, right_index=True
+                    ret, pop_df, how="left", left_index=True, right_index=True
                 )
             else:
                 ret = pd.merge(
-                    pro_df, pop_df, how='left', left_index=True, right_index=True
+                    pro_df, pop_df, how="left", left_index=True, right_index=True
                 )
             return ret.reset_index()
-        elif level == 'region':
+        elif level == "region":
             if include_geometry:
                 geo_df = self.italy_regions_geometry
             pop_df = self.get_italian_population_for_regions(
@@ -334,14 +371,14 @@ class Geopop:
             reg_df = self.italy_regions
             if include_geometry:
                 ret = pd.merge(
-                    reg_df, geo_df, how='left', left_index=True, right_index=True
+                    reg_df, geo_df, how="left", left_index=True, right_index=True
                 )
                 ret = pd.merge(
-                    ret, pop_df, how='left', left_index=True, right_index=True
+                    ret, pop_df, how="left", left_index=True, right_index=True
                 )
             else:
                 ret = pd.merge(
-                    reg_df, pop_df, how='left', left_index=True, right_index=True
+                    reg_df, pop_df, how="left", left_index=True, right_index=True
                 )
             return ret.reset_index()
         else:

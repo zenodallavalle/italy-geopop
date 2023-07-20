@@ -11,7 +11,7 @@ First of all, activate the pandas extension
   :linenos:
 
   from italy_geopop.pandas_extension import pandas_activate
-  pandas_activate(include_geometry=True)
+  pandas_activate(include_geometry=True, data_year=2022)
 
 
 

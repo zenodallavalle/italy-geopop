@@ -68,7 +68,7 @@ First of all, let's **activate the accessor**. This registers the accessor to pa
   :lineno-start: 6
 
   from italy_geopop.pandas_extension import pandas_activate
-  pandas_activate(include_geometry=True)
+  pandas_activate(include_geometry=True, data_year=2022)
 
 .. hint::
 

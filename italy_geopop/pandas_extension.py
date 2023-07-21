@@ -22,9 +22,9 @@ class ItalyGeopop:
         include_geometry: bool = False,
         data_year: Optional[int] = None,
     ) -> None:
-        self.geopop = geopop.Geopop()
-        self.include_geometry = include_geometry
         self.data_year = data_year
+        self.geopop = geopop.Geopop(data_year=self.data_year)
+        self.include_geometry = include_geometry
         self._obj = pandas_obj
 
     @classmethod
